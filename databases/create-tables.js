@@ -6,9 +6,12 @@ module.exports = {
     // ships 테이블 생성
     db.run(`
       CREATE TABLE IF NOT EXISTS SHIP (
-            NAME TEXT PRIMARY KEY
+            ID INTEGER AUTOINCREMENT NOT NULL
+          , NAME TEXT NOT NULL
+          , CHANNEL_ID TEXT NOT NULL
           , CAPACITY INTEGER NOT NULL
           , DESCRIPTION TEXT
+          , PRIMARY KEY (NAME, CHANNEL_ID)
       )
     `);
 
@@ -16,10 +19,10 @@ module.exports = {
     db.run(`
       CREATE TABLE IF NOT EXISTS CREW (
             USERNAME TEXT NOT NULL
-          , SHIP_NAME TEXT NOT NULL
+          , SHIP_ID INTEGER NOT NULL
           , POSITION TEXT NOT NULL
-          , FOREIGN KEY (SHIP_NAME) REFERENCES SHIP (NAME)
-          , PRIMARY KEY (USERNAME, SHIP_NAME)
+          , FOREIGN KEY (SHIP_ID) REFERENCES SHIP (ID)
+          , PRIMARY KEY (USERNAME, SHIP_ID)
       )
     `);
   })
