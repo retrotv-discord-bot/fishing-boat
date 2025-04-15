@@ -2,27 +2,33 @@ const { db } = require("../../databases");
 const crypto = require('crypto');
 
 module.exports = {
+
+  // 신규 어선 생성
   createNewShip: (interaction) => {
     const name = interaction.options.getString("선명");
     const channelId = interaction.channelId;
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
 
-    db.run(
-      `INSERT INTO SHIP (
-             ID
-           , NAME
-           , CHANNEL_ID
-           , CAPACITY
-           , DESCRIPTION
-       ) VALUES (
-             ?
-           , ?
-           , ?
-           , ?
-           , ?
-       )`, [
-             crypto.createHash('sha512').update(name + channelId).digest('hex')
+    const clientId = interaction.user.id;
+    const shipId = crypto.createHash('sha512').update(name + channelId).digest('hex');
+
+    db.run(`
+      INSERT INTO SHIP (
+            ID
+          , NAME
+          , CHANNEL_ID
+          , CAPACITY
+          , DESCRIPTION
+      ) VALUES (
+            ?
+          , ?
+          , ?
+          , ?
+          , ?
+      )
+          `, [
+             shipId
            , name
            , channelId
            , capacity
@@ -32,34 +38,53 @@ module.exports = {
         if (err) {
           console.error(err.message);
           return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
-        }
+        } else {
+          db.run(`
+            INSERT INTO CREW (
+                  USER_ID
+                , SHIP_ID
+                , POSITION
+            ) VALUES (
+                  ?
+                , ?
+                , ?
+            )
+          `, [ clientId, shipId, "선장" ], async (err) => {
+            if (err) {
+              console.error(err.message);
+              return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
+            }
 
-        const shipEmbed = {
-          color: 0x0099ff,
-          title: name,
-          description: description,
-          fields: [
-            {
-              name: "인원수",
-              value: `총 ${capacity}명`,
-            },
-          ],
-          timestamp: new Date(),
-          footer: {
-            text: "어선 생성 완료!",
-          },
-        };
-        
-        await interaction.reply({ embeds: [ shipEmbed ] });
+            const shipEmbed = {
+              color: 0x0099ff,
+              title: name,
+              description: description,
+              fields: [
+                {
+                  name: "인원수",
+                  value: `총 ${capacity}명`,
+                }
+              ],
+              timestamp: new Date(),
+              footer: {
+                text: "어선 생성 완료!",
+              },
+            };
+            
+            await interaction.reply({ embeds: [ shipEmbed ] });
+          })
+        }
       }
     )
   },
 
+  // 어선 승선
   joinShip: (interaction) => {
     const crewId = interaction.user.id;
     const shipName = interaction.options.getString("선명");
     const channelId = interaction.channelId;
 
+    // 어선 조회
     db.get(`
       SELECT ID FROM SHIP WHERE NAME = ? AND CHANNEL_ID = ?
     ` , [ shipName, channelId ]
@@ -76,6 +101,7 @@ module.exports = {
 
           console.log(crewId, shipId);
 
+          // 어선에 탑승시키기
           db.run(`
             INSERT INTO CREW (USER_ID, SHIP_ID, POSITION)
             VALUES (?, ?, ?)
@@ -106,11 +132,12 @@ module.exports = {
     const channelId = interaction.channelId;
       const shipName = interaction.options.getString("선명");
 
+      // 어선에 탑승한 선원들 조회
       db.all(
         `SELECT C.USER_ID
            FROM CREW C
           INNER JOIN SHIP S
-            ON C.SHIP_ID = S.ID
+             ON C.SHIP_ID = S.ID
           WHERE S.NAME = ? AND S.CHANNEL_ID = ?`,
         [ shipName, channelId ],
         async (err, rows) => {
