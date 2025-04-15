@@ -1,0 +1,29 @@
+{
+  "name": "fishing-boat",
+  "version": "0.0.1-alpha",
+  "description": "디스코드 어선 봇",
+  "keywords": [
+    "bot"
+  ],
+  "homepage": "https://github.com/retrotv-discord-bot/fishing-boat#readme",
+  "bugs": {
+    "url": "https://github.com/retrotv-discord-bot/fishing-boat/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/retrotv-discord-bot/fishing-boat.git"
+  },
+  "license": "MIT",
+  "author": "yjj8353@gmail.com",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "discord.js": "^14.18.0",
+    "dotenv": "^16.5.0",
+    "sqlite3": "^5.1.7"
+  }
+}
