@@ -6,7 +6,7 @@ module.exports = {
     // ships 테이블 생성
     db.run(`
       CREATE TABLE IF NOT EXISTS SHIP (
-            ID INTEGER AUTOINCREMENT NOT NULL
+            ID TEXT UNIQUE NOT NULL
           , NAME TEXT NOT NULL
           , CHANNEL_ID TEXT NOT NULL
           , CAPACITY INTEGER NOT NULL
@@ -19,7 +19,7 @@ module.exports = {
     db.run(`
       CREATE TABLE IF NOT EXISTS CREW (
             USERNAME TEXT NOT NULL
-          , SHIP_ID INTEGER NOT NULL
+          , SHIP_ID TEXT NOT NULL
           , POSITION TEXT NOT NULL
           , FOREIGN KEY (SHIP_ID) REFERENCES SHIP (ID)
           , PRIMARY KEY (USERNAME, SHIP_ID)
