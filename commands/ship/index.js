@@ -1,5 +1,6 @@
+const { createNewShip, joinShip, callingSailor } = require("../../services/ship");
+
 const { SlashCommandBuilder } = require("discord.js");
-const { db } = require("../../databases");
 
 module.exports = {
 	data: new SlashCommandBuilder()
@@ -27,6 +28,12 @@ module.exports = {
           option
             .setName("설명")
             .setDescription("어떤 어선인지에 대한 설명을 정합니다.")
+            .setRequired(false)
+        )
+        .addStringOption((option) =>
+          option
+            .setName("출항시간")
+            .setDescription("어선의 출항시간을 정합니다.")
             .setRequired(false)
         )
       )
@@ -59,6 +66,12 @@ module.exports = {
       subcommand
         .setName("호출")
         .setDescription("어선에 탑승한 인원들에게 알림을 보냅니다.")
+        .addStringOption((option) =>
+          option
+            .setName("선명")
+            .setDescription("호출할 어선을 선택합니다.")
+            .setRequired(true),
+        )
       )
     
     .addSubcommand((subcommand) =>
@@ -71,75 +84,15 @@ module.exports = {
 
     // /어선 생성
 		if (interaction.options.getSubcommand() === "생성") {
-      const shipName = interaction.options.getString("선명");
-      const shipMemberCount = interaction.options.getInteger("인원수");
-      const shipDescription = interaction.options.getString("설명") || "설명이 없습니다.";
-
-      db.run(
-        `INSERT INTO SHIP (NAME, CAPACITY, DESCRIPTION) VALUES (?, ?, ?)`,
-        [ shipName, shipMemberCount, shipDescription ],
-        (err) => {
-          if (err) {
-            console.error(err.message);
-            return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
-          }
-        }
-      )
-
-      const shipEmbed = {
-        color: 0x0099ff,
-        title: shipName,
-        description: shipDescription,
-        fields: [
-          {
-            name: "인원수",
-            value: `총 ${shipMemberCount}명`,
-          },
-        ],
-        timestamp: new Date(),
-        footer: {
-          text: "어선 생성 완료!",
-        },
-      };
-      
-      await interaction.reply({ embeds: [ shipEmbed ] });
+      createNewShip(interaction);
     }
 
     if (interaction.options.getSubcommand() === "승선") {
-      const crewName = interaction.user.username;
-      const shipName = interaction.options.getString("선명");
-
-      console.log(shipName);
-      console.log(crewName);
-      console.log(interaction);
-
-      db.run(`
-        INSERT INTO CREW (USERNAME, SHIP_NAME, POSITION)
-        VALUES (?, ?, ?)
-      `, [ crewName, shipName, "선원" ], async (err) => {
-        if (err) {
-          console.error(err.message);
-          return await interaction.reply({ content: "승선에 실패했습니다.", ephemeral: true });
-        }
-      });
-
-      const shipEmbed = {
-        color: 0x0099ff,
-        title: shipName,
-        description: "승선 완료!",
-        timestamp: new Date(),
-        footer: {
-          text: "어선 승선 완료!",
-        },
-      };
-      
-      await interaction.reply({ embeds: [ shipEmbed ] });
+      joinShip(interaction);
     }
 
     if (interaction.options.getSubcommand() === "호출") {
-      const channel = interaction.client.channels.cache.get("channel_id");
-
-      channel.send("<user> 어선에 탑승한 인원들에게 알림을 보냅니다.");
+      callingSailor(interaction);
     }
 
     if (interaction.options.getSubcommand() === "하선") {
