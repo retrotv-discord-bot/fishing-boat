@@ -1,10 +1,10 @@
 const { db } = require("./index");
 
 module.exports = {
-  install: () => db.serialize(() => {
+  install: () => {
 
     // SHIP 테이블 생성
-    db.run(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS SHIP (
             ID TEXT UNIQUE NOT NULL PRIMARY KEY
           , NAME TEXT NOT NULL
@@ -15,7 +15,7 @@ module.exports = {
     `);
 
     // CREW 테이블 생성
-    db.run(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS CREW (
             USER_ID TEXT NOT NULL
           , SHIP_ID TEXT NOT NULL
@@ -26,7 +26,7 @@ module.exports = {
     `);
 
     // ALARM 테이블 생성
-    db.run(`
+    db.exec(`
       CREATE TABLE IF NOT EXISTS ALARM (
             SHIP_ID TEXT NOT NULL
           , ALARM_TIME TEXT NOT NULL
@@ -34,5 +34,5 @@ module.exports = {
           , PRIMARY KEY (SHIP_ID, ALARM_TIME)
       )
     `);
-  })
+  }
 };

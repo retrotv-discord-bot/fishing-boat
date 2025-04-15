@@ -1,6 +1,6 @@
 const fs = require("node:fs");
 const path = require("node:path");
-const { Client, Collection, GatewayIntentBits } = require("discord.js");
+const { Client, Events, Collection, GatewayIntentBits } = require("discord.js");
 const { token } = require("./config.json");
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -39,19 +39,11 @@ for (const file of eventFiles) {
 	}
 }
 
-// 데이터베이스 설정
-const { db } = require("./databases");
-const { install } = require("./databases/create-tables");
-db.all("SELECT 1", (err, rows) => {
-  if (err) {
-    console.error("Failed to query the database:", err.message);
-    return;
-  }
-
-  if ((rows[0]["1"] === 1)) {
-	install();
-	console.log("Database is ready!");
-  }
+client.on(Events.ShardError, error => {
+	console.error('A websocket connection encountered an error:', error);
 });
+
+// 데이터베이스 설정 (fishing-ship.db 파일이 없으면 새로 생성한다.)
+require("./databases/create-tables").install();
 
 client.login(token);

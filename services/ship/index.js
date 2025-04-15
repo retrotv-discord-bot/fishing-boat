@@ -1,81 +1,54 @@
-const { db } = require("../../databases");
-const crypto = require('crypto');
+const { db, transactionStart, transactionCommit, transactionRollback } = require("../../databases");
+const { shipDao } = require("../../dao/ship"); 
+const { crewDao } = require("../../dao/crew");
+const crypto = require("crypto");
+const crew = require("../../dao/crew");
 
 module.exports = {
 
   // 신규 어선 생성
-  createNewShip: (interaction) => {
+  createNewShip: async (interaction) => {
     const name = interaction.options.getString("선명");
     const channelId = interaction.channelId;
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
 
     const clientId = interaction.user.id;
-    const shipId = crypto.createHash('sha512').update(name + channelId).digest('hex');
+    const shipId = crypto.createHash("sha512").update(name + channelId).digest("hex");
 
-    db.run(`
-      INSERT INTO SHIP (
-            ID
-          , NAME
-          , CHANNEL_ID
-          , CAPACITY
-          , DESCRIPTION
-      ) VALUES (
-            ?
-          , ?
-          , ?
-          , ?
-          , ?
-      )
-          `, [
-             shipId
-           , name
-           , channelId
-           , capacity
-           , description
-       ],
-      async (err) => {
-        if (err) {
-          console.error(err.message);
-          return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
-        } else {
-          db.run(`
-            INSERT INTO CREW (
-                  USER_ID
-                , SHIP_ID
-                , POSITION
-            ) VALUES (
-                  ?
-                , ?
-                , ?
-            )
-          `, [ clientId, shipId, "선장" ], async (err) => {
-            if (err) {
-              console.error(err.message);
-              return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
-            }
+    const isExist = shipDao.isExist(shipId, channelId);
+    if (isExist) {
+      return interaction.reply({ content: "이미 존재하는 어선입니다.", ephemeral: true });
+    }
 
-            const shipEmbed = {
-              color: 0x0099ff,
-              title: name,
-              description: description,
-              fields: [
-                {
-                  name: "인원수",
-                  value: `총 ${capacity}명`,
-                }
-              ],
-              timestamp: new Date(),
-              footer: {
-                text: "어선 생성 완료!",
-              },
-            };
-            
-            await interaction.reply({ embeds: [ shipEmbed ] });
-          })
+    try {
+      transactionStart();
+      shipDao.insertShip(shipId, name, channelId, capacity, description);
+      crewDao.insertCrew(clientId, shipId, "선장");
+      transactionCommit();
+    } catch (err) {
+      console.error(err.message);
+      transactionRollback();
+      return interaction.reply({ content: "어선 생성에 실패했습니다.", ephemeral: true });
+    }
+
+    const shipEmbed = {
+      color: 0x0099ff,
+      title: name,
+      description: description,
+      fields: [
+        {
+          name: "인원수",
+          value: `총 ${capacity}명`,
         }
-      }
-    )
+      ],
+      timestamp: new Date(),
+      footer: {
+        text: "어선 생성 완료!",
+      },
+    };
+    
+    await interaction.reply({ embeds: [ shipEmbed ] });
   },
 
   // 어선 승선
@@ -94,7 +67,7 @@ module.exports = {
             return interaction.reply({ content: "어선 정보를 가져오는 데 실패했습니다.", ephemeral: true });
           }
 
-          const shipId = row['ID'];
+          const shipId = row["ID"];
           if (!shipId) {
             return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", ephemeral: true });
           }
