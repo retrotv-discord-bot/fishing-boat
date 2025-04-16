@@ -46,17 +46,30 @@ module.exports = {
       return crew;
     },
 
-    selectAllCrewInShip: (shipId, channelId) => {
+    selectAllCrewInShip: (shipName, channelId) => {
       const crew = db.prepare(`
         SELECT C.USER_ID
           FROM CREW C
         INNER JOIN SHIP S
             ON C.SHIP_ID = S.ID
-        WHERE S.NAME = '${shipId}'
+        WHERE S.NAME = '${shipName}'
           AND S.CHANNEL_ID = '${channelId}'
       `).all();
 
       return crew;
+    },
+
+    selectAllCrewsCountInShip: (shipName, channelId) => {
+      const count = db.prepare(`
+        SELECT COUNT(*) AS COUNT
+          FROM CREW C
+        INNER JOIN SHIP S
+            ON C.SHIP_ID = S.ID
+        WHERE S.NAME = '${shipName}'
+          AND S.CHANNEL_ID = '${channelId}'
+      `).all()[0].COUNT;
+
+      return count;
     },
 
     deleteCrew: (userId, shipName, channelId) => {

@@ -107,6 +107,12 @@ module.exports = {
       return interaction.reply({ content: "이미 해당 어선에 탑승하고 있습니다.", ephemeral: true });
     }
 
+    const crewsCount = crewDao.selectAllCrewsCountInShip(shipName, channelId);
+    const shipCapacity = ship[0].CAPACITY;
+    if (crewsCount.length >= shipCapacity) {
+      return interaction.reply({ content: "어선의 정원이 초과되었습니다.", ephemeral: true });
+    }
+
     try {
       crewDao.insertCrew(crewId, crewName, crewGlobalName, ship[0].ID, "선원");
     } catch (err) {
