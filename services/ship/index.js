@@ -102,8 +102,20 @@ module.exports = {
       return interaction.reply({ content: "해당 어선에 탑승하고 있지 않습니다.", ephemeral: true });
     }
 
+    let isCaptain = false;
     try {
+      transactionStart();
+
+      // 어선 하선
       crewDao.deleteCrew(crewId, shipName, channelId);
+
+      // 하선한 선원의 역할이 선장일 경우, 어선도 같이 침몰
+      if (crew[0].POSITION === "선장") {
+        isCaptain = true;
+        shipDao.deleteShip(shipName, channelId);
+      }
+
+      transactionCommit();
     } catch (err) {
       console.error(err.message);
       return interaction.reply({ content: "어선 하선에 실패했습니다.", ephemeral: true });
@@ -119,7 +131,22 @@ module.exports = {
       },
     };
     
-    return interaction.reply({ embeds: [ shipEmbed ] });
+    interaction.reply({ embeds: [ shipEmbed ], ephemeral: true });
+
+    // 선장이 하선한 경우, 어선이 침몰되었다고 알림
+    if (isCaptain) {
+      const shipEmbed = {
+        color: 0x0099ff,
+        title: shipName,
+        description: "어선이 침몰되었습니다!",
+        timestamp: new Date(),
+        footer: {
+          text: "꼬르륵!",
+        },
+      };
+      
+      return interaction.channel.send({ embeds: [ shipEmbed ] });
+    }
   },
 
   callingSailor: (interaction) => {

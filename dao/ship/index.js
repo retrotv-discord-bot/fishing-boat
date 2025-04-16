@@ -40,6 +40,14 @@ module.exports = {
       `).all();
 
       return ship;
-    }
+    },
+
+    deleteShip: (shipName, channelId) => {
+      db.exec(`
+        DELETE FROM SHIP
+         WHERE NAME = '${shipName}'
+           AND CHANNEL_ID = '${channelId}'
+      `);
+    },
   }
 }
