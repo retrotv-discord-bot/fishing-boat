@@ -1,6 +1,7 @@
 const { transactionStart, transactionCommit, transactionRollback } = require("../../databases");
 const { shipDao } = require("../../dao/ship"); 
 const { crewDao } = require("../../dao/crew");
+const { alarmDao } = require("../../dao/alarm");
 const crypto = require("crypto");
 
 module.exports = {
@@ -11,6 +12,7 @@ module.exports = {
     const channelId = interaction.channelId;
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
+    const alarmTime = interaction.options.getString("출항시간") || null;
 
     const clientId = interaction.user.id;
     const shipId = crypto.createHash("sha512").update(name + channelId).digest("hex");
@@ -24,6 +26,11 @@ module.exports = {
       transactionStart();
       shipDao.insertShip(shipId, name, channelId, capacity, description);
       crewDao.insertCrew(clientId, shipId, "선장");
+
+      if (alarmTime) {
+        alarmDao.insertAlarm(shipId, alarmTime);
+      }
+      
       transactionCommit();
     } catch (err) {
       console.error(err.message);
