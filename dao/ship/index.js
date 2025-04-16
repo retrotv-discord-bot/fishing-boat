@@ -13,7 +13,7 @@ module.exports = {
       return count > 0;
     },
 
-    insertShip: (shipId, name, channelId, capacity, description) => {
+    insertShip: (shipId, name, channelId, capacity, description, canMidParticipation) => {
       db.exec(`
         INSERT INTO SHIP (
               ID
@@ -21,12 +21,14 @@ module.exports = {
             , CHANNEL_ID
             , CAPACITY
             , DESCRIPTION
+            , CAN_MID_PARTICIPATION
         ) VALUES (
               '${shipId}'
             , '${name}'
             , '${channelId}'
             , '${capacity}'
             , '${description}'
+            , '${canMidParticipation}'
         )
       `);
     },

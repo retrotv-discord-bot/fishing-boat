@@ -12,6 +12,7 @@ module.exports = {
           , CAPACITY INTEGER NOT NULL
           , DESCRIPTION TEXT
           , CREATED_AT DATETIME DEFAULT (STRFTIME('%Y%m%d%H', 'now', 'localtime'))
+          , CAN_MID_PARTICIPATION TEXT NOT NULL DEFAULT 'N'
       )
     `);
 

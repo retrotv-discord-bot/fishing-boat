@@ -13,6 +13,7 @@ module.exports = {
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
     let alarmTime = interaction.options.getString("출항시간") || null;
+    let canMidParticipation = alarmTime === null || interaction.options.getBoolean("중참가능여부");
 
     if (alarmTime) {
       alarmTime = alarmTime.trim();
@@ -46,7 +47,7 @@ module.exports = {
 
     try {
       transactionStart();
-      shipDao.insertShip(shipId, name, channelId, capacity, description);
+      shipDao.insertShip(shipId, name, channelId, capacity, description, canMidParticipation ? "Y" : "N");
       crewDao.insertCrew(clientId, clientName, clientGlobalName, shipId, "선장");
 
       if (alarmTime) {
@@ -72,6 +73,10 @@ module.exports = {
         {
           name: "출항시간",
           value: alarmTime ? `${alarmTime.substring(0, 2)}:${alarmTime.substring(2, 4)}` : "설정되지 않음",
+        },
+        {
+          name: "중도참여 가능여부",
+          value: canMidParticipation ? "가능" : "불가능",
         }
       ],
       timestamp: new Date(),

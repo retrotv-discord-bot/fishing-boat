@@ -39,6 +39,12 @@ module.exports = {
             .setMinLength(3)
             .setMaxLength(5)
         )
+        .addBooleanOption((option) =>
+          option
+            .setName("중참가능여부")
+            .setDescription("중도 참여가 가능한지 여부를 정합니다. 기본 값은 True이며, 출항시간 값이 없는 경우 여기서 지정한 값과 관계없이 항상 True로 설정됩니다.")
+            .setRequired(false)
+        )
       )
 
     .addSubcommand((subcommand) =>
