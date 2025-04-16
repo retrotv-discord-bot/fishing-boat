@@ -15,15 +15,31 @@ module.exports = {
       const ship = shipDao.selectShipById(shipId);
       const shipName = ship['NAME'];
       const alarmTime = alarm['ALARM_TIME'];
+
       if (ship.length === 0) {
-        console.error(`Ship with ID ${shipId} not found.`);
         return;
       }
 
       const channelId = ship['CHANNEL_ID'];
-      const channel = await client.channels.fetch(channelId);
 
-      channel.send(`⛴️ 출항 알림: 어선 ${shipName}이(가) 출항합니다! 출항 시간: ${alarmTime}`);
+      const crews = crewDao.selectAllCrewInShip(shipName, channelId);
+      if (crews.length === 0) {
+        return;
+      }
+
+      const arrCrewId = crews.map((crew) => crew['USER_ID']);
+
+      let userMentions = `⛴️ 출항 알림: `;
+      userMentions = userMentions + arrCrewId.map((userId) => `<@${userId}>`).join(", ");
+      userMentions = userMentions + ` 선원들! 지금 당장 ${shipName}에 탑승하시오!`;
+
+      try {
+        const channel = await client.channels.fetch(channelId);
+        channel.send(userMentions);
+      } catch {
+        console.error(`${channelId} 채널이 존재하지 않습니다.`);
+        return;
+      }
     });
   }
 }
