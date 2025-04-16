@@ -37,6 +37,16 @@ module.exports = {
       if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
         return interaction.reply({ content: "출항시간이 정상적인 시간의 범주가 아닙니다.", ephemeral: true });
       }
+
+      const currentTime = new Date();
+      const currentHours = currentTime.getHours();
+      const currentMinutes = currentTime.getMinutes();
+      const currentAlarmTime = parseInt(currentHours.toString().padStart(2, '0') + currentMinutes.toString().padStart(2, '0'), 10);
+      const inputAlarmTime = parseInt(alarmTime, 10);
+
+      if (inputAlarmTime <= currentAlarmTime) {
+        return interaction.reply({ content: "출항시간은 현재 시간보다 미래로 설정해야 합니다.", ephemeral: true });
+      }
     }
 
     const clientId = interaction.user.id;
