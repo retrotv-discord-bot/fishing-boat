@@ -15,7 +15,11 @@ module.exports = {
     const alarmTime = interaction.options.getString("출항시간") || null;
 
     const clientId = interaction.user.id;
+    const clientName = interaction.user.username;
+    const clientGlobalName = interaction.user.globalName;
     const shipId = crypto.createHash("sha512").update(name + channelId).digest("hex");
+
+    console.log(interaction.user);
 
     const isExist = shipDao.isExist(shipId, channelId);
     if (isExist) {
@@ -25,12 +29,12 @@ module.exports = {
     try {
       transactionStart();
       shipDao.insertShip(shipId, name, channelId, capacity, description);
-      crewDao.insertCrew(clientId, shipId, "선장");
+      crewDao.insertCrew(clientId, clientName, clientGlobalName, shipId, "선장");
 
       if (alarmTime) {
         alarmDao.insertAlarm(shipId, alarmTime);
       }
-      
+
       transactionCommit();
     } catch (err) {
       console.error(err.message);
@@ -60,6 +64,8 @@ module.exports = {
   // 어선 승선
   embark: (interaction) => {
     const crewId = interaction.user.id;
+    const crewName = interaction.user.username;
+    const crewGlobalName = interaction.user.globalName;
     const shipName = interaction.options.getString("선명");
     const channelId = interaction.channelId;
 
@@ -80,7 +86,7 @@ module.exports = {
     }
 
     try {
-      crewDao.insertCrew(crewId, ship[0].ID, "선원");
+      crewDao.insertCrew(crewId, crewName, crewGlobalName, ship[0].ID, "선원");
     } catch (err) {
       console.error(err.message);
       return interaction.reply({ content: "어선 승선에 실패했습니다.", ephemeral: true });

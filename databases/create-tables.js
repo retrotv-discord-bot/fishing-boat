@@ -18,6 +18,8 @@ module.exports = {
     db.exec(`
       CREATE TABLE IF NOT EXISTS CREW (
             USER_ID TEXT NOT NULL
+          , USERNAME TEXT NOT NULL
+          , USER_GLOBAL_NAME TEXT NOT NULL
           , SHIP_ID TEXT NOT NULL
           , POSITION TEXT NOT NULL
           , FOREIGN KEY (SHIP_ID) REFERENCES SHIP (ID)

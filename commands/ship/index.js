@@ -106,7 +106,7 @@ module.exports = {
         description: "이 봇에 사용된 그림은 사실 어선이 아닌 상선의 그림입니다. 그리고 아주 유명한 유령선이죠.\n꺄아아아악!"
       };
       
-      await interaction.reply({ embeds: [ shipEmbed ] });
+      return interaction.reply({ embeds: [ shipEmbed ] });
     }
 	},
 };

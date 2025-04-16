@@ -13,14 +13,18 @@ module.exports = {
       return count > 0;
     },
 
-    insertCrew: (userId, shipId, position) => {
+    insertCrew: (userId, username, userGlobalName, shipId, position) => {
       db.exec(`
         INSERT INTO CREW (
               USER_ID
+            , USERNAME
+            , USER_GLOBAL_NAME
             , SHIP_ID
             , POSITION
         ) VALUES (
               '${userId}'
+            , '${username}'
+            , '${userGlobalName}'
             , '${shipId}'
             , '${position}'
         )

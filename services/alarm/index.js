@@ -14,7 +14,6 @@ module.exports = {
       const shipId = alarm['SHIP_ID'];
       const ship = shipDao.selectShipById(shipId);
       const shipName = ship['NAME'];
-      const alarmTime = alarm['ALARM_TIME'];
 
       if (ship.length === 0) {
         return;
