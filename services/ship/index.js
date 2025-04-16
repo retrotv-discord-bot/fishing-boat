@@ -2,7 +2,6 @@ const { db, transactionStart, transactionCommit, transactionRollback } = require
 const { shipDao } = require("../../dao/ship"); 
 const { crewDao } = require("../../dao/crew");
 const crypto = require("crypto");
-const crew = require("../../dao/crew");
 
 module.exports = {
 
@@ -58,78 +57,58 @@ module.exports = {
     const channelId = interaction.channelId;
 
     // 어선 조회
-    db.get(`
-      SELECT ID FROM SHIP WHERE NAME = ? AND CHANNEL_ID = ?
-    ` , [ shipName, channelId ]
-      , async (err, row) => {
-          if (err) {
-            console.error(err.message);
-            return interaction.reply({ content: "어선 정보를 가져오는 데 실패했습니다.", ephemeral: true });
-          }
+    const ship = shipDao.selectShip(shipName, channelId);
+    if (ship.length === 0) {
+      return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", ephemeral: true });
+    }
 
-          const shipId = row["ID"];
-          if (!shipId) {
-            return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", ephemeral: true });
-          }
+    if (ship.length > 1) {
+      return interaction.reply({ content: "두 개 이상의 어선이 감지되었습니다.\n문제가 지속될 경우, 관리자에게 문의하십시오.", ephemeral: true });
+    }
 
-          console.log(crewId, shipId);
+    // 어선 탑승여부 확인
+    const isExist = crewDao.isExist(crewId, ship[0].ID);
+    if (isExist) {
+      return interaction.reply({ content: "이미 해당 어선에 탑승하고 있습니다.", ephemeral: true });
+    }
 
-          // 어선에 탑승시키기
-          db.run(`
-            INSERT INTO CREW (USER_ID, SHIP_ID, POSITION)
-            VALUES (?, ?, ?)
-          `, [ crewId, shipId, "선원" ], async (err) => {
-            if (err) {
-              console.error(err.message);
-              return interaction.reply({ content: "승선에 실패했습니다.", ephemeral: true });
-            }
+    try {
+      crewDao.insertCrew(crewId, ship[0].ID, "선원");
+    } catch (err) {
+      console.error(err.message);
+      return interaction.reply({ content: "어선 승선에 실패했습니다.", ephemeral: true });
+    }
 
-            const shipEmbed = {
-              color: 0x0099ff,
-              title: shipName,
-              description: "승선 완료!",
-              timestamp: new Date(),
-              footer: {
-                text: "어선 승선 완료!",
-              },
-            };
-            
-            await interaction.reply({ embeds: [ shipEmbed ] });
-          });
-        }
-    );
+    const shipEmbed = {
+      color: 0x0099ff,
+      title: shipName,
+      description: "승선 완료!",
+      timestamp: new Date(),
+      footer: {
+        text: "어선 승선 완료!",
+      },
+    };
+    
+    interaction.reply({ embeds: [ shipEmbed ] });
   },
 
   callingSailor: (interaction) => {
     const channel = interaction.channel;
     const channelId = interaction.channelId;
-      const shipName = interaction.options.getString("선명");
+    const shipName = interaction.options.getString("선명");
 
-      // 어선에 탑승한 선원들 조회
-      db.all(
-        `SELECT C.USER_ID
-           FROM CREW C
-          INNER JOIN SHIP S
-             ON C.SHIP_ID = S.ID
-          WHERE S.NAME = ? AND S.CHANNEL_ID = ?`,
-        [ shipName, channelId ],
-        async (err, rows) => {
-          if (err) {
-            console.error(err.message);
-            return interaction.reply({ content: "어선에 탑승한 인원의 정보를 가져오는 데 실패했습니다.", ephemeral: true });
-          }
+    // 어선에 탑승한 선원들 조회
+    const crews = crewDao.selectAllCrewInShip(shipName, channelId);
 
-          if (rows.length === 0) {
-            return interaction.reply({ content: "해당 어선에 탑승한 인원이 없습니다.", ephemeral: true });
-          }
-          
-          const arrUserId = rows.map((row) => row.USER_ID);
-          let userMentions = arrUserId.map((userId) => `<@${userId}>`).join(", ");
-          userMentions = userMentions + " 선원들! 지금 당장 어선에 탑승하시오!";
+    if (crews.length === 0) {
+      return interaction.reply({ content: "해당 어선에 탑승한 선원이 없습니다.", ephemeral: true });
+    }
 
-          channel.send(userMentions);
-          return interaction.reply({ content: "어선에 탑승한 인원들에게 알림을 보냈습니다.", ephemeral: true });
-        }
-      )
+    const arrCrewId = crews.map((crew) => crew.USER_ID);
+    let userMentions = arrCrewId.map((userId) => `<@${userId}>`).join(", ");
+    userMentions = userMentions + " 선원들! 지금 당장 어선에 탑승하시오!";
+
+    channel.send(userMentions);
+    return interaction.reply({ content: "어선에 탑승한 인원들에게 알림을 보냈습니다.", ephemeral: true });
   }
 }

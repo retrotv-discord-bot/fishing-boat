@@ -30,5 +30,16 @@ module.exports = {
         )
       `);
     },
+
+    selectShip: (shipName, channelId) => {
+      const ship = db.prepare(`
+        SELECT *
+          FROM SHIP
+        WHERE NAME = '${shipName}'
+          AND CHANNEL_ID = '${channelId}'
+      `).all();
+
+      return ship;
+    }
   }
 }
