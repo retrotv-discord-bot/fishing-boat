@@ -12,7 +12,27 @@ module.exports = {
     const channelId = interaction.channelId;
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
-    const alarmTime = interaction.options.getString("출항시간") || null;
+    let alarmTime = interaction.options.getString("출항시간") || null;
+
+    if (alarmTime) {
+      alarmTime = alarmTime.trim();
+      alarmTime = alarmTime.replace(":", "");
+      alarmTime = alarmTime.replace(" ", "");
+
+      if (alarmTime.length !== 4 && alarmTime.length !== 3) {
+        return interaction.reply({ content: "출항시간은 24시간 체계의 hhmm 혹은 hh:mm 형식으로 입력해주세요.\n예시: 18:30, 06:00, 9:00, 1000, 2030, 800", ephemeral: true });
+      }
+
+      if (alarmTime.length === 3) {
+        alarmTime = "0" + alarmTime;
+      }
+
+      const hh = alarmTime.substring(0, 2);
+      const mm = alarmTime.substring(2, 4);
+      if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
+        return interaction.reply({ content: "출항시간이 정상적인 시간의 범주가 아닙니다.", ephemeral: true });
+      }
+    }
 
     const clientId = interaction.user.id;
     const clientName = interaction.user.username;
@@ -48,6 +68,10 @@ module.exports = {
         {
           name: "인원수",
           value: `총 ${capacity}명`,
+        },
+        {
+          name: "출항시간",
+          value: alarmTime ? `${alarmTime.substring(0, 2)}:${alarmTime.substring(2, 4)}` : "설정되지 않음",
         }
       ],
       timestamp: new Date(),
@@ -154,6 +178,7 @@ module.exports = {
       if (crew[0].POSITION === "선장") {
         isCaptain = true;
         shipDao.deleteShip(shipName, channelId);
+        crewDao.deleteCrewsOnShip(shipName, channelId);
       }
 
       transactionCommit();

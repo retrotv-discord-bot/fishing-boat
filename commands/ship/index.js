@@ -34,8 +34,10 @@ module.exports = {
         .addStringOption((option) =>
           option
             .setName("출항시간")
-            .setDescription("어선의 출항시간을 정합니다.")
+            .setDescription("어선의 출항시간을 정합니다. 시간은 24시간 체계로 입력하세요. (ex. 14:30, 08:30, 9:00, 2300, 930)")
             .setRequired(false)
+            .setMinLength(3)
+            .setMaxLength(5)
         )
       )
 

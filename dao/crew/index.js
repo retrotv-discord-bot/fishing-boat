@@ -83,6 +83,18 @@ module.exports = {
                   AND CHANNEL_ID = '${channelId}'
            )
       `);
+    },
+
+    deleteCrewsOnShip: (shipName, channelId) => {
+      db.exec(`
+        DELETE FROM CREW
+         WHERE SHIP_ID = (
+               SELECT ID
+                 FROM SHIP
+                WHERE NAME = '${shipName}'
+                  AND CHANNEL_ID = '${channelId}'
+           )
+      `);
     }
   }
 }
