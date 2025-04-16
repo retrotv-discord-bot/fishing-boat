@@ -1,4 +1,4 @@
-const { db, transactionStart, transactionCommit, transactionRollback } = require("../../databases");
+const { transactionStart, transactionCommit, transactionRollback } = require("../../databases");
 const { shipDao } = require("../../dao/ship"); 
 const { crewDao } = require("../../dao/crew");
 const crypto = require("crypto");
@@ -6,7 +6,7 @@ const crypto = require("crypto");
 module.exports = {
 
   // 신규 어선 생성
-  createNewShip: async (interaction) => {
+  createNewShip: (interaction) => {
     const name = interaction.options.getString("선명");
     const channelId = interaction.channelId;
     const capacity = interaction.options.getInteger("인원수");
@@ -47,11 +47,11 @@ module.exports = {
       },
     };
     
-    await interaction.reply({ embeds: [ shipEmbed ] });
+    return interaction.reply({ embeds: [ shipEmbed ] });
   },
 
   // 어선 승선
-  joinShip: (interaction) => {
+  embark: (interaction) => {
     const crewId = interaction.user.id;
     const shipName = interaction.options.getString("선명");
     const channelId = interaction.channelId;
@@ -89,7 +89,37 @@ module.exports = {
       },
     };
     
-    interaction.reply({ embeds: [ shipEmbed ] });
+    return interaction.reply({ embeds: [ shipEmbed ] });
+  },
+
+  disembark: (interaction) => {
+    const crewId = interaction.user.id;
+    const shipName = interaction.options.getString("선명");
+    const channelId = interaction.channelId;
+
+    const crew = crewDao.selectCrew(crewId, shipName, channelId);
+    if (crew.length === 0) {
+      return interaction.reply({ content: "해당 어선에 탑승하고 있지 않습니다.", ephemeral: true });
+    }
+
+    try {
+      crewDao.deleteCrew(crewId, shipName, channelId);
+    } catch (err) {
+      console.error(err.message);
+      return interaction.reply({ content: "어선 하선에 실패했습니다.", ephemeral: true });
+    }
+
+    const shipEmbed = {
+      color: 0x0099ff,
+      title: shipName,
+      description: "하선 완료!",
+      timestamp: new Date(),
+      footer: {
+        text: "어선 하선 완료!",
+      },
+    };
+    
+    return interaction.reply({ embeds: [ shipEmbed ] });
   },
 
   callingSailor: (interaction) => {

@@ -27,6 +27,20 @@ module.exports = {
       `);
     },
 
+    selectCrew: (userId, shipName, channelId) => {
+      const crew = db.prepare(`
+        SELECT C.USER_ID
+          FROM CREW C
+         INNER JOIN SHIP S
+            ON C.SHIP_ID = S.ID
+         WHERE C.USER_ID = '${userId}'
+           AND S.NAME = '${shipName}'
+           AND S.CHANNEL_ID = '${channelId}'
+      `).all();
+
+      return crew;
+    },
+
     selectAllCrewInShip: (shipId, channelId) => {
       const crew = db.prepare(`
         SELECT C.USER_ID
@@ -39,5 +53,18 @@ module.exports = {
 
       return crew;
     },
+
+    deleteCrew: (userId, shipName, channelId) => {
+      db.exec(`
+        DELETE FROM CREW
+         WHERE USER_ID = '${userId}'
+           AND SHIP_ID = (
+               SELECT ID
+                 FROM SHIP
+                WHERE NAME = '${shipName}'
+                  AND CHANNEL_ID = '${channelId}'
+           )
+      `);
+    }
   }
 }

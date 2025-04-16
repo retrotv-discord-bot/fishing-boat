@@ -1,4 +1,4 @@
-const { createNewShip, joinShip, callingSailor } = require("../../services/ship");
+const { createNewShip, embark, callingSailor, disembark } = require("../../services/ship");
 
 const { SlashCommandBuilder } = require("discord.js");
 
@@ -88,7 +88,7 @@ module.exports = {
     }
 
     if (interaction.options.getSubcommand() === "승선") {
-      joinShip(interaction);
+      embark(interaction);
     }
 
     if (interaction.options.getSubcommand() === "호출") {
@@ -96,18 +96,7 @@ module.exports = {
     }
 
     if (interaction.options.getSubcommand() === "하선") {
-      const shipName = interaction.options.getString("선명");
-      const shipEmbed = {
-        color: 0x0099ff,
-        title: shipName,
-        description: "하선 완료!",
-        timestamp: new Date(),
-        footer: {
-          text: "어선 하선 완료!",
-        },
-      };
-      
-      await interaction.reply({ embeds: [ shipEmbed ] });
+      disembark(interaction);
     }
 
     if (interaction.options.getSubcommand() === "여담") {
