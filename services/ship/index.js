@@ -13,7 +13,11 @@ module.exports = {
     const capacity = interaction.options.getInteger("인원수");
     const description = interaction.options.getString("설명") || "설명이 없습니다.";
     let alarmTime = interaction.options.getString("출항시간") || null;
-    let canMidParticipation = alarmTime === null || interaction.options.getBoolean("중참가능여부");
+    let canMidParticipation = true;
+
+    if (alarmTime !== null && interaction.options.getBoolean("중참가능여부") !== null) {
+      canMidParticipation = interaction.options.getBoolean("중참가능여부");
+    }
 
     if (alarmTime) {
       alarmTime = alarmTime.trim();
@@ -140,6 +144,19 @@ module.exports = {
     const shipCapacity = ship[0].CAPACITY;
     if (crewsCount.length >= shipCapacity) {
       return interaction.reply({ content: "어선의 정원이 초과되었습니다.", ephemeral: true });
+    }
+
+    const canMidParticipation = ship[0].CAN_MID_PARTICIPATION;
+    if (canMidParticipation === "N") {
+      const alarmTime = alarmDao.getAlarmsByShipId(ship[0].ID);
+      if (alarmTime.length !== 0) {
+        const now = new Date();
+        const nowHHMM = now.getHours() * 100 + now.getMinutes();
+
+        if (nowHHMM > alarmTime[0].ALARM_TIME) {
+          return interaction.reply({ content: "어선의 출항시간이 지나서 승선할 수 없습니다!", ephemeral: true });
+        }
+      }
     }
 
     try {

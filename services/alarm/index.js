@@ -40,8 +40,8 @@ module.exports = {
         console.error(`${channelId} 채널이 존재하지 않습니다.`);
       }
 
-      // 알람 삭제
-      alarmDao.deleteAlarm(shipId, alarmTime);
+      // 알람 작동 끄기
+      alarmDao.triggerdAlarm(shipId, alarmTime);
     });
   }
 }

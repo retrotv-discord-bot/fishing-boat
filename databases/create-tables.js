@@ -34,6 +34,7 @@ module.exports = {
       CREATE TABLE IF NOT EXISTS ALARM (
             SHIP_ID TEXT NOT NULL
           , ALARM_TIME TEXT NOT NULL
+          , USE NOT NULL DEFAULT 'Y'
           , FOREIGN KEY (SHIP_ID) REFERENCES SHIP (ID)
           , PRIMARY KEY (SHIP_ID, ALARM_TIME)
       )
