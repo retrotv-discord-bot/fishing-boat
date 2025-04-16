@@ -31,6 +31,20 @@ module.exports = {
       `);
     },
 
+    selectShipById: (shipId) => {
+      const ship = db.prepare(`
+        SELECT *
+          FROM SHIP
+        WHERE ID = '${shipId}'
+      `).all();
+
+      if (ship.length === 1) {
+        return ship[0];
+      }
+
+      return [];
+    },
+
     selectShip: (shipName, channelId) => {
       const ship = db.prepare(`
         SELECT *

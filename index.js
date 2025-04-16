@@ -2,8 +2,10 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { Client, Events, Collection, GatewayIntentBits } = require("discord.js");
 const { token } = require("./config.json");
+const schedule = require('node-schedule');
+const { sendAlarm } = require("./services/alarm");
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [ GatewayIntentBits.Guilds ] });
 
 client.commands = new Collection();
 
@@ -38,6 +40,10 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
+
+schedule.scheduleJob('* * * * *', () => {
+	sendAlarm(client);
+});
 
 client.on(Events.ShardError, error => {
 	console.error('A websocket connection encountered an error:', error);

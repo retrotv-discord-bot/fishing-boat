@@ -20,5 +20,15 @@ module.exports = {
          WHERE SHIP_ID = '${shipId}'
       `);
     },
+
+    getAllAlarms: () => {
+      const result = db.prepare(`
+        SELECT *
+          FROM ALARM
+         WHERE ALARM_TIME <= (SELECT STRFTIME('%H%M', 'now', 'localtime'))
+      `).all();
+
+      return result;
+    }
   }
 }
