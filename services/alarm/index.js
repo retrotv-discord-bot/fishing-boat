@@ -14,6 +14,7 @@ module.exports = {
       const shipId = alarm['SHIP_ID'];
       const ship = shipDao.selectShipById(shipId);
       const shipName = ship['NAME'];
+      const alarmTime = alarm['ALARM_TIME'];
 
       if (ship.length === 0) {
         return;
@@ -37,8 +38,10 @@ module.exports = {
         channel.send(userMentions);
       } catch {
         console.error(`${channelId} 채널이 존재하지 않습니다.`);
-        return;
       }
+
+      // 알람 삭제
+      alarmDao.deleteAlarm(shipId, alarmTime);
     });
   }
 }

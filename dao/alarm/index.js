@@ -14,10 +14,11 @@ module.exports = {
       `);
     },
 
-    deleteAlarm: (shipId) => {
+    deleteAlarm: (shipId, alarmTime) => {
       db.exec(`
         DELETE FROM ALARM
          WHERE SHIP_ID = '${shipId}'
+           AND ALARM_TIME = '${alarmTime}'
       `);
     },
 

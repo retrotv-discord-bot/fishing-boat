@@ -11,6 +11,7 @@ module.exports = {
           , CHANNEL_ID TEXT NOT NULL
           , CAPACITY INTEGER NOT NULL
           , DESCRIPTION TEXT
+          , CREATED_AT DATETIME DEFAULT (STRFTIME('%Y%m%d%H', 'now', 'localtime'))
       )
     `);
 

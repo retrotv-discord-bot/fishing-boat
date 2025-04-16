@@ -19,8 +19,6 @@ module.exports = {
     const clientGlobalName = interaction.user.globalName;
     const shipId = crypto.createHash("sha512").update(name + channelId).digest("hex");
 
-    console.log(interaction.user);
-
     const isExist = shipDao.isExist(shipId, channelId);
     if (isExist) {
       return interaction.reply({ content: "이미 존재하는 어선입니다.", ephemeral: true });
