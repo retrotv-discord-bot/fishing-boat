@@ -1,4 +1,5 @@
-const { createNewShip, embark, callingSailor, disembark } = require("../../services/ship");
+const { createNewShip, searchAllShips, embark, callingSailor, disembark } = require("../../services/ship");
+const { shipDao } = require("../../dao/ship");
 
 const { SlashCommandBuilder } = require("discord.js");
 
@@ -37,6 +38,12 @@ module.exports = {
             .setRequired(false)
         )
       )
+
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("목록")
+        .setDescription("어선 목록을 조회합니다.")
+    )
     
     .addSubcommand((subcommand) =>
       subcommand
@@ -46,7 +53,8 @@ module.exports = {
           option
             .setName("선명")
             .setDescription("승선할 어선을 선택합니다.")
-            .setRequired(true),
+            .setRequired(true)
+            .setAutocomplete(true)
         )
       )
 
@@ -58,7 +66,8 @@ module.exports = {
           option
             .setName("선명")
             .setDescription("하선할 어선을 선택합니다.")
-            .setRequired(true),
+            .setRequired(true)
+            .setAutocomplete(true)
         )
       )
 
@@ -70,7 +79,8 @@ module.exports = {
           option
             .setName("선명")
             .setDescription("호출할 어선을 선택합니다.")
-            .setRequired(true),
+            .setRequired(true)
+            .setAutocomplete(true),
         )
       )
     
@@ -80,11 +90,32 @@ module.exports = {
         .setDescription("이 봇에 대한 여담을 알려드립니다.")
       )
     ,
+
+  async autocomplete(interaction) {
+    if (interaction.options.getSubcommand() === "승선") {
+      const focusedValue = interaction.options.getFocused();
+      const ships = shipDao.selectAllShipsByName(focusedValue, interaction.channelId);
+      const choices = ships.map((ship) => ship.NAME);
+      await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+    }
+
+    if (interaction.options.getSubcommand() === "하선") {
+      const focusedValue = interaction.options.getFocused();
+      const ships = shipDao.selectAllShipsByNameAndUserId(focusedValue, interaction.channelId, interaction.user.id);
+      const choices = ships.map((ship) => ship.NAME);
+      await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+    }
+  },
+
 	async execute(interaction) {
 
     // /어선 생성
 		if (interaction.options.getSubcommand() === "생성") {
       createNewShip(interaction);
+    }
+
+    if (interaction.options.getSubcommand() === "목록") {
+      searchAllShips(interaction);
     }
 
     if (interaction.options.getSubcommand() === "승선") {

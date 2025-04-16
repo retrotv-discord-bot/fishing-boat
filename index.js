@@ -45,6 +45,25 @@ schedule.scheduleJob('* * * * *', () => {
 	sendAlarm(client);
 });
 
+client.on(Events.InteractionCreate, async interaction => {
+	if (interaction.isChatInputCommand()) {
+		// command handling
+	} else if (interaction.isAutocomplete()) {
+		const command = interaction.client.commands.get(interaction.commandName);
+
+		if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+		}
+
+		try {
+			await command.autocomplete(interaction);
+		} catch (error) {
+			console.error(error);
+		}
+	}
+});
+
 client.on(Events.ShardError, error => {
 	console.error('A websocket connection encountered an error:', error);
 });

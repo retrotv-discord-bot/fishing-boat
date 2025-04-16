@@ -59,6 +59,30 @@ module.exports = {
     return interaction.reply({ embeds: [ shipEmbed ] });
   },
 
+  // 어선 목록 조회
+  searchAllShips: (interaction) => {
+    const channelId = interaction.channelId;
+    const ships = shipDao.selectAllShips(channelId);
+
+    if (ships.length === 0) {
+      return interaction.reply({ content: "어선이 존재하지 않습니다.", ephemeral: true });
+    }
+
+    const shipEmbeds = ships.map((ship) => ({
+      color: 0x0099ff,
+      title: ship.NAME,
+      description: ship.DESCRIPTION,
+      fields: [
+        {
+          name: "인원수",
+          value: `총 ${ship.CAPACITY}명`,
+        }
+      ]
+    }));
+
+    return interaction.reply({ embeds: shipEmbeds, ephemeral: true });
+  },
+
   // 어선 승선
   embark: (interaction) => {
     const crewId = interaction.user.id;

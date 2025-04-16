@@ -56,6 +56,43 @@ module.exports = {
       return ship;
     },
 
+    selectAllShips: (channelId) => {
+      const ships = db.prepare(`
+        SELECT *
+          FROM SHIP
+        WHERE CHANNEL_ID = '${channelId}'
+      `).all();
+
+      return ships;
+    },
+
+    selectAllShipsByName: (shipName, channelId) => {
+      const ships = db.prepare(`
+        SELECT *
+          FROM SHIP
+        WHERE NAME LIKE '%${shipName}%'
+          AND CHANNEL_ID = '${channelId}'
+      `).all();
+
+      return ships;
+    },
+
+    selectAllShipsByNameAndUserId: (shipName, channelId, userId) => {
+      const ships = db.prepare(`
+        SELECT *
+          FROM SHIP
+         WHERE NAME LIKE '%${shipName}%'
+           AND CHANNEL_ID = '${channelId}'
+           AND ID IN (
+               SELECT SHIP_ID
+                 FROM CREW
+                WHERE USER_ID = '${userId}'
+           )
+      `).all();
+
+      return ships;
+    },
+
     deleteShip: (shipName, channelId) => {
       db.exec(`
         DELETE FROM SHIP
