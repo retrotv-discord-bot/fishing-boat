@@ -1,4 +1,4 @@
-const { createNewShip, sinkingShip, searchAllShips, embark, callingSailor, disembark } = require("../../services/ship");
+const { createNewShip, sinkingShip, searchAllShips, searchCrewsInShip, embark, callingSailor, disembark } = require("../../services/ship");
 const { shipDao } = require("../../dao/ship");
 
 const { SlashCommandBuilder } = require("discord.js");
@@ -64,6 +64,19 @@ module.exports = {
       subcommand
         .setName("목록")
         .setDescription("어선 목록을 조회합니다.")
+    )
+
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("선원목록")
+        .setDescription("어선에 탑승한 선원 목록을 조회합니다.")
+        .addStringOption((option) =>
+          option
+            .setName("선명")
+            .setDescription("어선의 이름을 입력하세요.")
+            .setRequired(true)
+            .setAutocomplete(true)
+        )
     )
     
     .addSubcommand((subcommand) =>
@@ -133,6 +146,13 @@ module.exports = {
       const choices = ships.map((ship) => ship.NAME);
       await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     }
+
+    if (interaction.options.getSubcommand() === "선원목록") {
+      const focusedValue = interaction.options.getFocused();
+      const ships = shipDao.selectAllShipsByNameAndUserId(focusedValue, interaction.channelId, interaction.user.id);
+      const choices = ships.map((ship) => ship.NAME);
+      await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+    }
   },
 
 	async execute(interaction) {
@@ -148,6 +168,10 @@ module.exports = {
 
     if (interaction.options.getSubcommand() === "목록") {
       searchAllShips(interaction);
+    }
+
+    if (interaction.options.getSubcommand() === "선원목록") {
+      searchCrewsInShip(interaction);
     }
 
     if (interaction.options.getSubcommand() === "승선") {

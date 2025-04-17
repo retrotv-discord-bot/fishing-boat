@@ -170,6 +170,42 @@ module.exports = {
     return interaction.reply({ embeds: shipEmbeds, ephemeral: true });
   },
 
+  searchCrewsInShip: (interaction) => {
+    const shipName = interaction.options.getString("선명");
+    const channelId = interaction.channelId;
+
+    // 어선 조회
+    const ship = shipDao.selectShip(shipName, channelId);
+    if (ship.length === 0) {
+      return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", ephemeral: true });
+    }
+
+    // 어선에 탑승한 선원들 조회
+    const crews = crewDao.selectAllCrewInShip(shipName, channelId);
+
+    if (crews.length === 0) {
+      return interaction.reply({ content: "해당 어선에 탑승한 선원이 없습니다.", ephemeral: true });
+    }
+
+    const arrCrewName = crews.map((crew) => crew.USER_GLOBAL_NAME);
+    let userMentions = arrCrewName.map((crewName) => `${crewName}`).join("\n");
+
+    const crewsEmbed = {
+      color: 0x0099ff,
+      title: shipName,
+      description: "선원목록",
+      fields: [
+        {
+          name: "탑승인원",
+          value: userMentions
+        }
+      ],
+      timestamp: new Date()
+    }
+
+    return interaction.reply({ embeds: [ crewsEmbed ], ephemeral: true });
+  },
+
   // 어선 승선
   embark: (interaction) => {
     const crewId = interaction.user.id;

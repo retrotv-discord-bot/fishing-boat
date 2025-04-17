@@ -61,6 +61,7 @@ module.exports = {
     selectAllCrewInShip: (shipName, channelId) => {
       const crew = db.prepare(`
         SELECT C.USER_ID
+             , C.USER_GLOBAL_NAME
           FROM CREW C
         INNER JOIN SHIP S
             ON C.SHIP_ID = S.ID
