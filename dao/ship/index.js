@@ -79,6 +79,23 @@ module.exports = {
       return ships;
     },
 
+    selectAllShipsByNameAndUserIdAndPosition: (shipName, channelId, userId, position) => {
+      const ships = db.prepare(`
+        SELECT *
+          FROM SHIP
+         WHERE NAME LIKE '%${shipName}%'
+           AND CHANNEL_ID = '${channelId}'
+           AND ID IN (
+               SELECT SHIP_ID
+                 FROM CREW
+                WHERE USER_ID = '${userId}'
+                  AND POSITION = '${position}'
+           )
+      `).all();
+
+      return ships;
+    },
+
     selectAllShipsByNameAndUserId: (shipName, channelId, userId) => {
       const ships = db.prepare(`
         SELECT *

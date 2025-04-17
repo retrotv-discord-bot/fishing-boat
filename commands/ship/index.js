@@ -11,7 +11,7 @@ module.exports = {
     // /어선 생성 선명|"선명 입력" 인원수|"인원수 입력" + 1개 선택사항
     .addSubcommand((subcommand) =>
       subcommand
-        .setName("생성")
+        .setName("건조")
         .setDescription("어선을 생성합니다.")
         .addStringOption((option) =>
           option
@@ -45,7 +45,20 @@ module.exports = {
             .setDescription("중도 참여가 가능한지 여부를 정합니다. 기본 값은 True이며, 출항시간 값이 없는 경우 여기서 지정한 값과 관계없이 항상 True로 설정됩니다.")
             .setRequired(false)
         )
-      )
+    )
+
+    .addSubcommand((subcommand) =>
+      subcommand
+        .setName("침몰")
+        .setDescription("어선을 침몰시킵니다. 해당 어선의 선장만 사용할 수 있습니다!")
+        .addStringOption((option) =>
+          option
+            .setName("선명")
+            .setDescription("침몰할 어선을 선택합니다.")
+            .setRequired(true)
+            .setAutocomplete(true)
+        )
+    )
 
     .addSubcommand((subcommand) =>
       subcommand
@@ -107,6 +120,13 @@ module.exports = {
       await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     }
 
+    if (interaction.options.getSubcommand() === "침몰") {
+      const focusedValue = interaction.options.getFocused();
+      const ships = shipDao.selectAllShipsByNameAndPosition(focusedValue, interaction.channelId, interaction.user.id, '선장');
+      const choices = ships.map((ship) => ship.NAME);
+      await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+    }
+
     if (interaction.options.getSubcommand() === "하선") {
       const focusedValue = interaction.options.getFocused();
       const ships = shipDao.selectAllShipsByNameAndUserId(focusedValue, interaction.channelId, interaction.user.id);
@@ -118,8 +138,12 @@ module.exports = {
 	async execute(interaction) {
 
     // /어선 생성
-		if (interaction.options.getSubcommand() === "생성") {
+		if (interaction.options.getSubcommand() === "건조") {
       createNewShip(interaction);
+    }
+
+    if (interaction.options.getSubcommand() === "침몰") {
+      sinkingShip(interaction);
     }
 
     if (interaction.options.getSubcommand() === "목록") {

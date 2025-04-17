@@ -13,6 +13,18 @@ module.exports = {
       return count > 0;
     },
 
+    isCaptain: (userId, shipId) => {
+      const count = db.prepare(`
+        SELECT COUNT(*) AS COUNT
+          FROM CREW
+        WHERE USER_ID = '${userId}'
+          AND SHIP_ID = '${shipId}'
+          AND POSITION = '선장'
+      `).all()[0].COUNT;
+
+      return count > 0;
+    },
+
     insertCrew: (userId, username, userGlobalName, shipId, position) => {
       db.exec(`
         INSERT INTO CREW (

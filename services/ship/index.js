@@ -75,6 +75,45 @@ module.exports = {
     return interaction.reply({ embeds: [ shipEmbed ] });
   },
 
+  sinkingShip: (interaction) => {
+    const shipName = interaction.options.getString("선명");
+    const channelId = interaction.channelId;
+
+    // 어선 조회
+    const ship = shipDao.selectShip(shipName, channelId);
+    if (ship.length === 0) {
+      return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", ephemeral: true });
+    }
+
+    const isCaptain = crewDao.isCaptain(interaction.user.id, ship[0].ID);
+    if (!isCaptain) {
+      return interaction.reply({ content: "어선의 선장만 침몰시킬 수 있습니다.", ephemeral: true });
+    }
+
+    // 어선 삭제
+    try {
+      transactionStart();
+      shipDao.deleteShip(shipName, channelId);
+      crewDao.deleteCrewsOnShip(shipName, channelId);
+      transactionCommit();
+    } catch (err) {
+      console.error(err.message);
+      return interaction.reply({ content: "어선이 침몰하지 않았습니다.", ephemeral: true });
+    }
+
+    const shipEmbed = {
+      color: 0x0099ff,
+      title: shipName,
+      description: "어선이 침몰되었습니다!",
+      timestamp: new Date(),
+      footer: {
+        text: "꼬르륵!",
+      },
+    };
+    
+    return interaction.reply({ embeds: [ shipEmbed ] });
+  },
+
   // 어선 목록 조회
   searchAllShips: (interaction) => {
     const channelId = interaction.channelId;
