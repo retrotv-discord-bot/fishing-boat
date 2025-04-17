@@ -1,20 +1,31 @@
 const { db } = require("../../databases");
 
 module.exports = {
-  shipDao: {
-    isExist: (shipId, channelId) => {
-      const count = db.prepare(`
+    shipDao: {
+        isExist: (shipId, channelId) => {
+            const count = db
+                .prepare(
+                    `
         SELECT COUNT(*) AS COUNT
           FROM SHIP
         WHERE ID = '${shipId}'
           AND CHANNEL_ID = '${channelId}'
-      `).all()[0].COUNT;
-      
-      return count > 0;
-    },
+      `,
+                )
+                .all()[0].COUNT;
 
-    insertShip: (shipId, name, channelId, capacity, description, canMidParticipation) => {
-      db.exec(`
+            return count > 0;
+        },
+
+        insertShip: (
+            shipId,
+            name,
+            channelId,
+            capacity,
+            description,
+            canMidParticipation,
+        ) => {
+            db.exec(`
         INSERT INTO SHIP (
               ID
             , NAME
@@ -31,56 +42,79 @@ module.exports = {
             , '${canMidParticipation}'
         )
       `);
-    },
+        },
 
-    selectShipById: (shipId) => {
-      const ship = db.prepare(`
+        selectShipById: (shipId) => {
+            const ship = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
         WHERE ID = '${shipId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      if (ship.length === 1) {
-        return ship[0];
-      }
+            if (ship.length === 1) {
+                return ship[0];
+            }
 
-      return [];
-    },
+            return [];
+        },
 
-    selectShip: (shipName, channelId) => {
-      const ship = db.prepare(`
+        selectShip: (shipName, channelId) => {
+            const ship = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
         WHERE NAME = '${shipName}'
           AND CHANNEL_ID = '${channelId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      return ship;
-    },
+            return ship;
+        },
 
-    selectAllShips: (channelId) => {
-      const ships = db.prepare(`
+        selectAllShips: (channelId) => {
+            const ships = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
         WHERE CHANNEL_ID = '${channelId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      return ships;
-    },
+            return ships;
+        },
 
-    selectAllShipsByName: (shipName, channelId) => {
-      const ships = db.prepare(`
+        selectAllShipsByName: (shipName, channelId) => {
+            const ships = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
         WHERE NAME LIKE '%${shipName}%'
           AND CHANNEL_ID = '${channelId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      return ships;
-    },
+            return ships;
+        },
 
-    selectAllShipsByNameAndUserIdAndPosition: (shipName, channelId, userId, position) => {
-      const ships = db.prepare(`
+        selectAllShipsByNameAndUserIdAndPosition: (
+            shipName,
+            channelId,
+            userId,
+            position,
+        ) => {
+            const ships = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
          WHERE NAME LIKE '%${shipName}%'
@@ -91,13 +125,17 @@ module.exports = {
                 WHERE USER_ID = '${userId}'
                   AND POSITION = '${position}'
            )
-      `).all();
+      `,
+                )
+                .all();
 
-      return ships;
-    },
+            return ships;
+        },
 
-    selectAllShipsByNameAndUserId: (shipName, channelId, userId) => {
-      const ships = db.prepare(`
+        selectAllShipsByNameAndUserId: (shipName, channelId, userId) => {
+            const ships = db
+                .prepare(
+                    `
         SELECT *
           FROM SHIP
          WHERE NAME LIKE '%${shipName}%'
@@ -107,17 +145,19 @@ module.exports = {
                  FROM CREW
                 WHERE USER_ID = '${userId}'
            )
-      `).all();
+      `,
+                )
+                .all();
 
-      return ships;
-    },
+            return ships;
+        },
 
-    deleteShip: (shipName, channelId) => {
-      db.exec(`
+        deleteShip: (shipName, channelId) => {
+            db.exec(`
         DELETE FROM SHIP
          WHERE NAME = '${shipName}'
            AND CHANNEL_ID = '${channelId}'
       `);
+        },
     },
-  }
-}
+};

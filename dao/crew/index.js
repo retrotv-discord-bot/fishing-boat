@@ -1,32 +1,40 @@
 const { db } = require("../../databases");
 
 module.exports = {
-  crewDao: {
-    isExist: (userId, shipId) => {
-      const count = db.prepare(`
+    crewDao: {
+        isExist: (userId, shipId) => {
+            const count = db
+                .prepare(
+                    `
         SELECT COUNT(*) AS COUNT
           FROM CREW
         WHERE USER_ID = '${userId}'
           AND SHIP_ID = '${shipId}'
-      `).all()[0].COUNT;
+      `,
+                )
+                .all()[0].COUNT;
 
-      return count > 0;
-    },
+            return count > 0;
+        },
 
-    isCaptain: (userId, shipId) => {
-      const count = db.prepare(`
+        isCaptain: (userId, shipId) => {
+            const count = db
+                .prepare(
+                    `
         SELECT COUNT(*) AS COUNT
           FROM CREW
         WHERE USER_ID = '${userId}'
           AND SHIP_ID = '${shipId}'
           AND POSITION = '선장'
-      `).all()[0].COUNT;
+      `,
+                )
+                .all()[0].COUNT;
 
-      return count > 0;
-    },
+            return count > 0;
+        },
 
-    insertCrew: (userId, username, userGlobalName, shipId, position) => {
-      db.exec(`
+        insertCrew: (userId, username, userGlobalName, shipId, position) => {
+            db.exec(`
         INSERT INTO CREW (
               USER_ID
             , USERNAME
@@ -41,10 +49,12 @@ module.exports = {
             , '${position}'
         )
       `);
-    },
+        },
 
-    selectCrew: (userId, shipName, channelId) => {
-      const crew = db.prepare(`
+        selectCrew: (userId, shipName, channelId) => {
+            const crew = db
+                .prepare(
+                    `
         SELECT C.USER_ID
              , C.POSITION
           FROM CREW C
@@ -53,13 +63,17 @@ module.exports = {
          WHERE C.USER_ID = '${userId}'
            AND S.NAME = '${shipName}'
            AND S.CHANNEL_ID = '${channelId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      return crew;
-    },
+            return crew;
+        },
 
-    selectAllCrewInShip: (shipName, channelId) => {
-      const crew = db.prepare(`
+        selectAllCrewInShip: (shipName, channelId) => {
+            const crew = db
+                .prepare(
+                    `
         SELECT C.USER_ID
              , C.USER_GLOBAL_NAME
           FROM CREW C
@@ -67,26 +81,32 @@ module.exports = {
             ON C.SHIP_ID = S.ID
         WHERE S.NAME = '${shipName}'
           AND S.CHANNEL_ID = '${channelId}'
-      `).all();
+      `,
+                )
+                .all();
 
-      return crew;
-    },
+            return crew;
+        },
 
-    selectAllCrewsCountInShip: (shipName, channelId) => {
-      const count = db.prepare(`
+        selectAllCrewsCountInShip: (shipName, channelId) => {
+            const count = db
+                .prepare(
+                    `
         SELECT COUNT(*) AS COUNT
           FROM CREW C
         INNER JOIN SHIP S
             ON C.SHIP_ID = S.ID
         WHERE S.NAME = '${shipName}'
           AND S.CHANNEL_ID = '${channelId}'
-      `).all()[0].COUNT;
+      `,
+                )
+                .all()[0].COUNT;
 
-      return count;
-    },
+            return count;
+        },
 
-    deleteCrew: (userId, shipName, channelId) => {
-      db.exec(`
+        deleteCrew: (userId, shipName, channelId) => {
+            db.exec(`
         DELETE FROM CREW
          WHERE USER_ID = '${userId}'
            AND SHIP_ID = (
@@ -96,10 +116,10 @@ module.exports = {
                   AND CHANNEL_ID = '${channelId}'
            )
       `);
-    },
+        },
 
-    deleteCrewsOnShip: (shipName, channelId) => {
-      db.exec(`
+        deleteCrewsOnShip: (shipName, channelId) => {
+            db.exec(`
         DELETE FROM CREW
          WHERE SHIP_ID = (
                SELECT ID
@@ -108,6 +128,6 @@ module.exports = {
                   AND CHANNEL_ID = '${channelId}'
            )
       `);
-    }
-  }
-}
+        },
+    },
+};
