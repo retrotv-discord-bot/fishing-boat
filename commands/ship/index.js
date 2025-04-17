@@ -1,4 +1,4 @@
-const { createNewShip, searchAllShips, embark, callingSailor, disembark } = require("../../services/ship");
+const { createNewShip, sinkingShip, searchAllShips, embark, callingSailor, disembark } = require("../../services/ship");
 const { shipDao } = require("../../dao/ship");
 
 const { SlashCommandBuilder } = require("discord.js");
@@ -122,7 +122,7 @@ module.exports = {
 
     if (interaction.options.getSubcommand() === "침몰") {
       const focusedValue = interaction.options.getFocused();
-      const ships = shipDao.selectAllShipsByNameAndPosition(focusedValue, interaction.channelId, interaction.user.id, '선장');
+      const ships = shipDao.selectAllShipsByNameAndUserIdAndPosition(focusedValue, interaction.channelId, interaction.user.id, '선장');
       const choices = ships.map((ship) => ship.NAME);
       await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     }
