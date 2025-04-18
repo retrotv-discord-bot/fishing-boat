@@ -3,7 +3,7 @@ const crypto = require("crypto");
 const { shipRepository } = require("@/repository/ship.repository");
 const { crewRepository } = require("@/repository/crew.repository");
 const { alarmRepository } = require("@/repository/alarm.repository");
-const { AppDataSource, begin, commit, rollback, release } = require("../../config/datasource");
+const { begin, commit, rollback, release } = require("../../config/datasource");
 
 module.exports = {
     createNewShip: async (interaction) => {
