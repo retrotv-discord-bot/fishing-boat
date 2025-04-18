@@ -30,11 +30,8 @@ module.exports = {
             const arrCrewId = crews.map((crew) => crew["USER_ID"]);
 
             let userMentions = `⛴️ 출항 알림: `;
-            userMentions =
-                userMentions +
-                arrCrewId.map((userId) => `<@${userId}>`).join(", ");
-            userMentions =
-                userMentions + ` 선원들! 지금 당장 ${shipName}에 탑승하시오!`;
+            userMentions = userMentions + arrCrewId.map((userId) => `<@${userId}>`).join(", ");
+            userMentions = userMentions + ` 선원들! 지금 당장 ${shipName}에 탑승하시오!`;
 
             try {
                 const channel = await client.channels.fetch(channelId);

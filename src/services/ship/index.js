@@ -1,8 +1,4 @@
-const {
-    transactionStart,
-    transactionCommit,
-    transactionRollback,
-} = require("../../databases");
+const { transactionStart, transactionCommit, transactionRollback } = require("../../config/databases");
 const { shipDao } = require("../../dao/ship");
 const { crewDao } = require("../../dao/crew");
 const { alarmDao } = require("../../dao/alarm");
@@ -14,17 +10,12 @@ module.exports = {
         const name = interaction.options.getString("선명");
         const channelId = interaction.channelId;
         const capacity = interaction.options.getInteger("인원수");
-        const description =
-            interaction.options.getString("설명") || "설명이 없습니다.";
+        const description = interaction.options.getString("설명") || "설명이 없습니다.";
         let alarmTime = interaction.options.getString("출항시간") || null;
         let canMidParticipation = true;
 
-        if (
-            alarmTime !== null &&
-            interaction.options.getBoolean("중참가능여부") !== null
-        ) {
-            canMidParticipation =
-                interaction.options.getBoolean("중참가능여부");
+        if (alarmTime !== null && interaction.options.getBoolean("중참가능여부") !== null) {
+            canMidParticipation = interaction.options.getBoolean("중참가능여부");
         }
 
         // 시간에 대한 유효성 검증
@@ -35,8 +26,7 @@ module.exports = {
 
             if (alarmTime.length !== 4 && alarmTime.length !== 3) {
                 return interaction.reply({
-                    content:
-                        "출항시간은 24시간 체계의 hhmm 혹은 hh:mm 형식으로 입력해주세요.\n예시: 18:30, 06:00, 9:00, 1000, 2030, 800",
+                    content: "출항시간은 24시간 체계의 hhmm 혹은 hh:mm 형식으로 입력해주세요.\n예시: 18:30, 06:00, 9:00, 1000, 2030, 800",
                     ephemeral: true,
                 });
             }
@@ -57,11 +47,7 @@ module.exports = {
             const currentTime = new Date();
             const currentHours = currentTime.getHours();
             const currentMinutes = currentTime.getMinutes();
-            const currentAlarmTime = parseInt(
-                currentHours.toString().padStart(2, "0") +
-                    currentMinutes.toString().padStart(2, "0"),
-                10,
-            );
+            const currentAlarmTime = parseInt(currentHours.toString().padStart(2, "0") + currentMinutes.toString().padStart(2, "0"), 10);
             const inputAlarmTime = parseInt(alarmTime, 10);
 
             if (inputAlarmTime <= currentAlarmTime) {
@@ -90,21 +76,8 @@ module.exports = {
 
         try {
             transactionStart();
-            shipDao.insertShip(
-                shipId,
-                name,
-                channelId,
-                capacity,
-                description,
-                canMidParticipation ? "Y" : "N",
-            );
-            crewDao.insertCrew(
-                clientId,
-                clientName,
-                clientGlobalName,
-                shipId,
-                "선장",
-            );
+            shipDao.insertShip(shipId, name, channelId, capacity, description, canMidParticipation ? "Y" : "N");
+            crewDao.insertCrew(clientId, clientName, clientGlobalName, shipId, "선장");
 
             if (alarmTime) {
                 alarmDao.insertAlarm(shipId, alarmTime);
@@ -131,9 +104,7 @@ module.exports = {
                 },
                 {
                     name: "출항시간",
-                    value: alarmTime
-                        ? `${alarmTime.substring(0, 2)}:${alarmTime.substring(2, 4)}`
-                        : "설정되지 않음",
+                    value: alarmTime ? `${alarmTime.substring(0, 2)}:${alarmTime.substring(2, 4)}` : "설정되지 않음",
                 },
                 {
                     name: "중도참여 가능여부",
@@ -252,9 +223,7 @@ module.exports = {
         }
 
         const arrCrewName = crews.map((crew) => crew.USER_GLOBAL_NAME);
-        let userMentions = arrCrewName
-            .map((crewName) => `${crewName}`)
-            .join("\n");
+        let userMentions = arrCrewName.map((crewName) => `${crewName}`).join("\n");
 
         const crewsEmbed = {
             color: 0x0099ff,
@@ -291,8 +260,7 @@ module.exports = {
 
         if (ship.length > 1) {
             return interaction.reply({
-                content:
-                    "두 개 이상의 어선이 감지되었습니다.\n문제가 지속될 경우, 관리자에게 문의하십시오.",
+                content: "두 개 이상의 어선이 감지되었습니다.\n문제가 지속될 경우, 관리자에게 문의하십시오.",
                 ephemeral: true,
             });
         }
@@ -306,10 +274,7 @@ module.exports = {
             });
         }
 
-        const crewsCount = crewDao.selectAllCrewsCountInShip(
-            shipName,
-            channelId,
-        );
+        const crewsCount = crewDao.selectAllCrewsCountInShip(shipName, channelId);
         const shipCapacity = ship[0].CAPACITY;
         if (crewsCount.length >= shipCapacity) {
             return interaction.reply({
@@ -335,13 +300,7 @@ module.exports = {
         }
 
         try {
-            crewDao.insertCrew(
-                crewId,
-                crewName,
-                crewGlobalName,
-                ship[0].ID,
-                "선원",
-            );
+            crewDao.insertCrew(crewId, crewName, crewGlobalName, ship[0].ID, "선원");
         } catch (err) {
             console.error(err.message);
             transactionRollback();
@@ -387,8 +346,10 @@ module.exports = {
             // 하선한 선원의 역할이 선장일 경우, 어선도 같이 침몰
             if (crew[0].POSITION === "선장") {
                 isCaptain = true;
-                shipDao.deleteShip(shipName, channelId);
+                const ship = shipDao.selectShip(shipName, channelId);
+                alarmDao.deleteAlarm(ship[0].ID);
                 crewDao.deleteCrewsOnShip(shipName, channelId);
+                shipDao.deleteShip(shipName, channelId);
             }
 
             transactionCommit();

@@ -1,4 +1,4 @@
-const { db } = require("../../databases");
+const { db } = require("../../config/databases");
 
 module.exports = {
     crewDao: {

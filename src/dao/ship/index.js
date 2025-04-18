@@ -1,4 +1,4 @@
-const { db } = require("../../databases");
+const { db } = require("../../config/databases");
 
 module.exports = {
     shipDao: {
@@ -17,14 +17,7 @@ module.exports = {
             return count > 0;
         },
 
-        insertShip: (
-            shipId,
-            name,
-            channelId,
-            capacity,
-            description,
-            canMidParticipation,
-        ) => {
+        insertShip: (shipId, name, channelId, capacity, description, canMidParticipation) => {
             db.exec(`
         INSERT INTO SHIP (
               ID
@@ -106,12 +99,7 @@ module.exports = {
             return ships;
         },
 
-        selectAllShipsByNameAndUserIdAndPosition: (
-            shipName,
-            channelId,
-            userId,
-            position,
-        ) => {
+        selectAllShipsByNameAndUserIdAndPosition: (shipName, channelId, userId, position) => {
             const ships = db
                 .prepare(
                     `

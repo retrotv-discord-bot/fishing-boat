@@ -1,4 +1,4 @@
-const { db } = require("../../databases");
+const { db } = require("../../config/databases");
 
 module.exports = {
     alarmDao: {
@@ -15,11 +15,12 @@ module.exports = {
         },
 
         deleteAlarm: (shipId, alarmTime) => {
-            db.exec(`
-        DELETE FROM ALARM
-         WHERE SHIP_ID = '${shipId}'
-           AND ALARM_TIME = '${alarmTime}'
-      `);
+            let sql = `DELETE FROM ALARM
+                        WHERE SHIP_ID = '${shipId}'`;
+            if (alarmTime) {
+                sql += `AND ALARM_TIME = '${alarmTime}'`;
+            }
+            db.exec(sql);
         },
 
         triggerdAlarm: (shipId, alarmTime) => {
