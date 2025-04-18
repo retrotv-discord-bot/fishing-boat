@@ -1,0 +1,9 @@
+{
+    "type": "sqlite",
+    "database": "fishing-ship.db",
+    "synchronize": true,
+    "logging": false,
+    "entities": ["src/entity/**/*.entity.js"],
+    "migrations": ["src/migration/**/*.js"],
+    "subscribers": ["src/subscriber/**/*.js"]
+}
