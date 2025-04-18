@@ -156,6 +156,25 @@ module.exports = {
             const choices = ships.map((ship) => ship.name);
             await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
         }
+
+        if (interaction.options.getSubcommand() === "호출") {
+            const focusedValue = interaction.options.getFocused();
+            const joinedShips = await crewRepository.find({
+                where: {
+                    userId: interaction.user.id,
+                },
+            });
+            const shipIds = joinedShips.map((ship) => ship.shipId);
+            const ships = await shipRepository.find({
+                where: {
+                    name: Like(`%${focusedValue}%`),
+                    channelId: interaction.channelId,
+                    id: In(shipIds),
+                },
+            });
+            const choices = ships.map((ship) => ship.name);
+            await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+        }
     },
 
     async execute(interaction) {

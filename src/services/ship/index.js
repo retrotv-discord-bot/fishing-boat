@@ -19,7 +19,14 @@ module.exports = {
         }
 
         // 출항 시간에 대한 유효성 검증
-        this.__validateAlarmTime(alarmTime, interaction);
+        const [ valid, message ] = __validateAlarmTime(alarmTime);
+
+        if (!valid) {
+            return interaction.reply({
+                content: message,
+                ephemeral: true,
+            });
+        }
 
         const clientId = interaction.user.id;
         const clientName = interaction.user.username;
@@ -42,6 +49,14 @@ module.exports = {
         try {
             await begin();
 
+            console.log("===== 어선 생성 시작 =====");
+            console.log("선명: ", name);
+            console.log("채널 ID: ", channelId);
+            console.log("인원수: ", capacity);
+            console.log("설명: ", description);
+            console.log("출항시간: ", alarmTime);
+            console.log("중참가능여부: ", canMidParticipation);
+
             await shipRepository.save({
                 id: shipId,
                 name: name,
@@ -50,6 +65,16 @@ module.exports = {
                 description: description,
                 canMidParticipation: canMidParticipation ? "Y" : "N",
             });
+
+            console.log("===== 어선 생성 완료 =====")
+
+            console.log("===== 선원 생성 시작 =====");
+            console.log("유저 ID: ", clientId);
+            console.log("유저 이름: ", clientName);
+            console.log("유저 글로벌 이름: ", clientGlobalName);
+            console.log("어선 ID: ", shipId);
+            console.log("유저 역할: ", "선장");
+
             await crewRepository.save({
                 userId: clientId,
                 username: clientName,
@@ -58,12 +83,20 @@ module.exports = {
                 position: "선장",
             });
 
+            console.log("===== 선원 생성 완료 =====")
+
+            console.log("===== 알람 생성 시작 =====");
+            console.log("어선 ID: ", shipId);
+            console.log("출항시간: ", alarmTime);
+
             if (alarmTime) {
                 alarmRepository.save({
                     shipId: shipId,
                     alarmTime: alarmTime,
                 });
             }
+
+            console.log("===== 알람 생성 완료 =====")
 
             await commit();
         } catch (err) {
@@ -175,6 +208,13 @@ module.exports = {
         try {
             await begin();
 
+            console.log("===== 어선 승선 시작 =====");
+            console.log("유저 ID: ", crewId);
+            console.log("유저 이름: ", crewName);
+            console.log("유저 글로벌 이름: ", crewGlobalName);
+            console.log("어선 ID: ", ship.id);
+            console.log("유저 역할: ", "선원");
+
             crewRepository.save({
                 userId: crewId,
                 username: crewName,
@@ -182,6 +222,8 @@ module.exports = {
                 shipId: ship.id,
                 position: "선원",
             });
+
+            console.log("===== 어선 승선 완료 =====")
 
             await commit();
         } catch (err) {
@@ -236,6 +278,12 @@ module.exports = {
             await begin();
 
             // 어선 하선
+
+            console.log("===== 어선 하선 시작 =====");
+            console.log("유저 ID: ", crewId);
+            console.log("어선 명: ", shipName);
+            console.log("어선 채널 ID: ", channelId);
+
             await crewRepository.remove(
                 await crewRepository.findOne({
                     where: {
@@ -248,9 +296,12 @@ module.exports = {
                 }),
             );
 
+            console.log("===== 어선 하선 완료 =====")
+
             // 하선한 선원의 역할이 선장일 경우, 어선도 같이 침몰
-            console.log(`${crew.username}의 역할: ${crew.position}`);
             if (crew.position === "선장") {
+                console.log("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
+
                 isCaptain = true;
 
                 // 모든 선원 삭제
@@ -262,9 +313,12 @@ module.exports = {
                         },
                     },
                 });
+
                 if (allCrews) {
                     await crewRepository.remove(allCrews);
                 }
+
+                console.log("모든 유저를 삭제했습니다.");
 
                 // 알람 삭제
                 const allAlams = await alarmRepository.findOne({
@@ -279,11 +333,19 @@ module.exports = {
                     await alarmRepository.remove(allAlams);
                 }
 
+                console.log("모든 알람을 삭제했습니다.");
+
+                console.log("===== 어선 침몰 시작 =====");
+                console.log("어선 ID: ", shipName);
+                console.log("어선 채널 ID: ", channelId);
+
                 // 어선 삭제
                 await shipRepository.delete({
                     name: shipName,
                     channelId: channelId,
                 });
+
+                console.log("===== 어선 침몰 완료 =====");
             }
 
             await commit();
@@ -333,11 +395,14 @@ module.exports = {
         const shipName = interaction.options.getString("선명");
 
         // 어선에 탑승한 선원들 조회
-        const crews = await AppDataSource.createQueryBuilder("Crew")
-            .innerJoinAndSelect("crew.ship", "ship")
-            .where("ship.name = :name", { name: shipName })
-            .andWhere("ship.channelId = :channelId", { channelId: channelId })
-            .getMany();
+        const crews = await crewRepository.find({
+            where: {
+                ship: {
+                    name: shipName,
+                    channelId: channelId,
+                },
+            },
+        });
 
         if (crews.length === 0) {
             return interaction.reply({
@@ -500,18 +565,14 @@ module.exports = {
     },
 };
 
-function __validateAlarmTime(alarmTime, interaction) {
+function __validateAlarmTime(alarmTime) {
     if (alarmTime) {
         alarmTime = alarmTime.trim();
         alarmTime = alarmTime.replace(":", "");
         alarmTime = alarmTime.replace(" ", "");
 
         if (alarmTime.length !== 4 && alarmTime.length !== 3) {
-            interaction.reply({
-                content: "출항시간은 24시간 체계의 hhmm 혹은 hh:mm 형식으로 입력해주세요.\n예시: 18:30, 06:00, 9:00, 1000, 2030, 800",
-                ephemeral: true,
-            });
-            return false;
+            return [ false, "출항시간은 24시간 체계의 hhmm 혹은 hh:mm 형식으로 입력해주세요.\n예시: 18:30, 06:00, 9:00, 1000, 2030, 800" ];
         }
 
         if (alarmTime.length === 3) {
@@ -521,11 +582,7 @@ function __validateAlarmTime(alarmTime, interaction) {
         const hh = alarmTime.substring(0, 2);
         const mm = alarmTime.substring(2, 4);
         if (hh < 0 || hh > 23 || mm < 0 || mm > 59) {
-            interaction.reply({
-                content: "출항시간이 정상적인 시간의 범주가 아닙니다.",
-                ephemeral: true,
-            });
-            return false;
+            return [ false, "출항시간이 정상적인 시간의 범주가 아닙니다." ];
         }
 
         const currentTime = new Date();
@@ -535,12 +592,8 @@ function __validateAlarmTime(alarmTime, interaction) {
         const inputAlarmTime = parseInt(alarmTime, 10);
 
         if (inputAlarmTime <= currentAlarmTime) {
-            interaction.reply({
-                content: "출항시간은 현재 시간보다 미래로 설정해야 합니다.",
-                ephemeral: true,
-            });
-            return false;
+            return [ false, "출항시간은 현재 시간보다 미래로 설정해야 합니다." ];
         }
     }
-    return true;
+    return [ true, null ];
 }
