@@ -24,7 +24,7 @@ module.exports = {
             const shipId = alarms.shipId;
             const ship = await shipRepository.findOne({
                 where: {
-                    shipId: shipId,
+                    id: shipId,
                 },
             });
             const shipName = ship.name;
