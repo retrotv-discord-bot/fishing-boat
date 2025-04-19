@@ -18,24 +18,20 @@ module.exports = {
         });
 
         alarms.forEach(async (alarm) => {
-            console.log("shipId: ", alarm.shipId);
-            console.log("alarmTime: ", alarm.alarmTime);
-
-            const shipId = alarms.shipId;
+            const shipId = alarm.shipId;
             const ship = await shipRepository.findOne({
                 where: {
                     id: shipId,
                 },
             });
+
             const shipName = ship.name;
-            console.log("shipName: ", shipName);
+            const channelId = ship.channelId;
 
             if (!ship) {
                 return;
             }
 
-            const channelId = ship.channelId;
-            console.log("channelId: ", channelId);
 
             const crews = await crewRepository.find({
                 where: {
