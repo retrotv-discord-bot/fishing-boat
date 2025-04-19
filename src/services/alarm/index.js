@@ -63,9 +63,8 @@ module.exports = {
             }
 
             // 알람 작동 끄기
-            await alarmRepository.update(alarm, {
-                use: "N",
-            });
+            alarm.use = "N";
+            await alarmRepository.save(alarm);
         });
     },
 };
