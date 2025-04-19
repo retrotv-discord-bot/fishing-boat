@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 
-const { shipRepository } = require("@/repository/ship.repository");
-const { crewRepository } = require("@/repository/crew.repository");
-const { alarmRepository } = require("@/repository/alarm.repository");
+const { shipRepository } = require("../../repository/ship.repository");
+const { crewRepository } = require("../../repository/crew.repository");
+const { alarmRepository } = require("../../repository/alarm.repository");
 const { begin, commit, rollback, release } = require("../../config/datasource");
 
 module.exports = {

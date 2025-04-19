@@ -1,6 +1,6 @@
-const { createNewShip, sinkingShip, searchAllShips, searchCrewsInShip, embark, callingSailor, disembark } = require("@/services/ship");
-const { crewRepository } = require("@/repository/crew.repository");
-const { shipRepository } = require("@/repository/ship.repository");
+const { createNewShip, sinkingShip, searchAllShips, searchCrewsInShip, embark, callingSailor, disembark } = require("../../../services/ship");
+const { crewRepository } = require("../../../repository/crew.repository");
+const { shipRepository } = require("../../../repository/ship.repository");
 
 const { SlashCommandBuilder } = require("discord.js");
 const { Like, In } = require("typeorm");
