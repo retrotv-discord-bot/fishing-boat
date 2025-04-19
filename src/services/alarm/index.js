@@ -63,7 +63,7 @@ module.exports = {
             }
 
             // 알람 작동 끄기
-            await alarmRepository.softRemove(alarm);
+            await alarmRepository.remove(alarm);
         });
     },
 };
