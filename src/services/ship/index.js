@@ -28,8 +28,10 @@ module.exports = {
             });
         }
 
-        alarmTime = alarmTime.replace(":", "");
-        alarmTime = alarmTime.replace(" ", "");
+        if (alarmTime) {
+            alarmTime = alarmTime.replace(":", "");
+            alarmTime = alarmTime.replace(" ", "");
+        }
 
         const clientId = interaction.user.id;
         const clientName = interaction.user.username;
