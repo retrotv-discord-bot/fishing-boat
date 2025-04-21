@@ -11,6 +11,7 @@ import Crew from "../../entities/crew";
 import Alarm from "../../entities/alarm";
 
 import Logger from "../../config/logtape";
+import type ShipEntity from "../../entities/ship.entity";
 
 export default class ShipService {
     private readonly log = Logger(["bot", "ShipService"]);
@@ -145,7 +146,7 @@ export default class ShipService {
             where: {
                 userId: clientId,
                 position: "선장",
-                ship: {
+                ships: {
                     id: ship.id,
                 },
             },
@@ -160,7 +161,7 @@ export default class ShipService {
 
             const allCrews = await this.crewRepository.find({
                 where: {
-                    ship: {
+                    ships: {
                         name: shipName,
                         channelId: channelId,
                     },
@@ -256,7 +257,7 @@ export default class ShipService {
         // 어선에 탑승한 선원들 조회
         const crews = await this.crewRepository.find({
             where: {
-                ship: {
+                ships: {
                     name: shipName,
                     channelId: channelId,
                 },
@@ -322,7 +323,7 @@ export default class ShipService {
 
         const crews = await this.crewRepository.find({
             where: {
-                ship: {
+                ships: {
                     name: shipName,
                     channelId: channelId,
                 },
@@ -402,7 +403,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [shipEmbed] });
     };
 
-    public desembark = async (interaction: any): Promise<void> => {
+    public disembark = async (interaction: any): Promise<void> => {
         const crewId = interaction.user.id;
         const shipName = interaction.options.getString("선명");
         const channelId = interaction.channelId;
@@ -410,7 +411,7 @@ export default class ShipService {
         const crew = await this.crewRepository.findOne({
             where: {
                 userId: crewId,
-                ship: {
+                ships: {
                     name: shipName,
                     channelId: channelId,
                 },
@@ -440,7 +441,7 @@ export default class ShipService {
                 // 모든 선원 삭제
                 const allCrews = await this.crewRepository.find({
                     where: {
-                        ship: {
+                        ships: {
                             name: shipName,
                             channelId: channelId,
                         },
@@ -527,7 +528,7 @@ export default class ShipService {
         // 어선에 탑승한 선원들 조회
         const crews = await this.crewRepository.find({
             where: {
-                ship: {
+                ships: {
                     name: shipName,
                     channelId: channelId,
                 },
@@ -550,5 +551,26 @@ export default class ShipService {
             content: "어선에 탑승한 인원들에게 알림을 보냈습니다.",
             ephemeral: true,
         });
+    };
+
+    public getAllShips = async (shipsName: string, channelId: string, crewId?: string, position?: string): Promise<string[]> => {
+        const queryBuilder = this.crewRepository
+            .createQueryBuilder("crew")
+            .innerJoinAndSelect("crew.ships", "ship")
+            .where("ship.name LIKE :shipsName", { shipsName: `%${shipsName}%` })
+            .andWhere("ship.channelId = :channelId", { channelId });
+
+        if (crewId) {
+            queryBuilder.andWhere("crew.userId = :crewId", { crewId });
+        }
+        if (position) {
+            queryBuilder.andWhere("crew.position = :position", { position });
+        }
+
+        const results = await queryBuilder.getMany();
+        const ships = results.map((result) => result.ships) as unknown as ShipEntity[];
+        const uniqueShipNames = Array.from(new Set(ships.map((ship) => ship.name)));
+
+        return uniqueShipNames;
     };
 }

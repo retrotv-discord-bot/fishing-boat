@@ -50,9 +50,9 @@ export default class AlarmService {
 
             const crews = await this.crewRepository.find({
                 where: {
-                    ship: {
-                        name: shipName,
-                        channelId: channelId,
+                    ships: {
+                        name: ship.name,
+                        channelId: ship.channelId,
                     },
                 },
             });

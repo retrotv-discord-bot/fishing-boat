@@ -5,7 +5,7 @@ import ShipService from "../../../services/ship";
 import ApplicationCommand from "../../../types/ApplicationCommand";
 
 const shipService = new ShipService();
-const { createShip } = shipService;
+const { createShip, embark, disembark, sinking, searchShips, searchCrewsInShip, callingSailor, getAllShips } = shipService;
 
 export default new ApplicationCommand({
     data: new SlashCommandBuilder()
@@ -93,67 +93,58 @@ export default new ApplicationCommand({
         const focusedOption = interaction.options.getFocused(true);
         let choices: string[] = [];
 
-        if (interaction.getSubcommand() === "승선") {
-            // const focusedValue = interaction.options.getFocused();
-            // const ships = shipDao.selectAllShipsByName(focusedValue, interaction.channelId);
-            // const choices = ships.map((ship) => ship.NAME);
-            // await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+        if (interaction.options.getSubcommand() === "승선") {
+            const focusedValue = interaction.options.getFocused();
+            choices = await getAllShips(focusedValue, interaction.channelId);
         }
 
         if (interaction.options.getSubcommand() === "침몰") {
-            //   const focusedValue = interaction.options.getFocused();
-            //   const ships = shipDao.selectAllShipsByNameAndUserIdAndPosition(focusedValue, interaction.channelId, interaction.user.id, '선장');
-            //   const choices = ships.map((ship) => ship.NAME);
-            //   await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+            const focusedValue = interaction.options.getFocused();
+            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id, "선장");
         }
 
         if (interaction.options.getSubcommand() === "하선") {
-            //   const focusedValue = interaction.options.getFocused();
-            //   const ships = shipDao.selectAllShipsByNameAndUserId(focusedValue, interaction.channelId, interaction.user.id);
-            //   const choices = ships.map((ship) => ship.NAME);
-            //   await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+            const focusedValue = interaction.options.getFocused();
+            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id);
         }
 
         if (interaction.options.getSubcommand() === "선원목록") {
-            //   const focusedValue = interaction.options.getFocused();
-            //   const ships = shipDao.selectAllShipsByNameAndUserId(focusedValue, interaction.channelId, interaction.user.id);
-            //   const choices = ships.map((ship) => ship.NAME);
-            //   await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
+            const focusedValue = interaction.options.getFocused();
+            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id);
         }
 
-        const filtered = choices.filter((choice) => choice.includes(focusedOption.value));
-        await interaction.respond(filtered.map((choice) => ({ name: choice, value: choice })));
+        await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     },
 
     async execute(interaction: any) {
         if (interaction.options.getSubcommand() === "건조") {
             createShip(interaction);
         }
-        // if (interaction.options.getSubcommand() === "침몰") {
-        //   sinking(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "목록") {
-        //   searchShips(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "선원목록") {
-        //   searchCrewsInShip(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "승선") {
-        //   embark(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "호출") {
-        //   callingSailor(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "하선") {
-        //   disembark(interaction);
-        // }
-        // if (interaction.options.getSubcommand() === "여담") {
-        //   const shipEmbed = {
-        //     color: 0x0099ff,
-        //     title: "어선 여담",
-        //     description: "이 봇에 사용된 그림은 사실 어선이 아닌 상선의 그림입니다. 그리고 아주 유명한 유령선이죠.\n꺄아아아악!"
-        //   };
-        //   return interaction.reply({ embeds: [ shipEmbed ] });
-        // }
+        if (interaction.options.getSubcommand() === "침몰") {
+            sinking(interaction);
+        }
+        if (interaction.options.getSubcommand() === "목록") {
+            searchShips(interaction);
+        }
+        if (interaction.options.getSubcommand() === "선원목록") {
+            searchCrewsInShip(interaction);
+        }
+        if (interaction.options.getSubcommand() === "승선") {
+            embark(interaction);
+        }
+        if (interaction.options.getSubcommand() === "호출") {
+            callingSailor(interaction);
+        }
+        if (interaction.options.getSubcommand() === "하선") {
+            disembark(interaction);
+        }
+        if (interaction.options.getSubcommand() === "여담") {
+            const shipEmbed = {
+                color: 0x0099ff,
+                title: "어선 여담",
+                description: "이 봇에 사용된 그림은 사실 어선이 아닌 상선의 그림입니다. 그리고 아주 유명한 유령선이죠.\n꺄아아아악!",
+            };
+            return interaction.reply({ embeds: [shipEmbed] });
+        }
     },
 });

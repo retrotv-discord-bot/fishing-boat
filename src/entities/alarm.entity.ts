@@ -10,16 +10,16 @@ export default class AlarmEntity {
         this.use = use;
     }
 
-    @PrimaryColumn({ type: "text" })
+    @PrimaryColumn({ name: "SHIP_ID", type: "text" })
     shipId: string;
 
-    @PrimaryColumn({ type: "text" })
+    @PrimaryColumn({ name: "ALARM_TIME", type: "text" })
     alarmTime: string;
 
-    @Column({ type: "text", default: "Y" })
+    @Column({ name: "USE", type: "text", default: "Y" })
     use: string;
 
     @OneToOne(() => ShipEntity, (ship) => ship.id)
-    @JoinColumn({ name: "shipId" })
+    @JoinColumn({ name: "SHIP_ID" })
     ship?: ShipEntity;
 }

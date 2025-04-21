@@ -1,5 +1,6 @@
-import { Entity, PrimaryColumn, Column, BeforeInsert } from "typeorm";
+import { Entity, PrimaryColumn, Column, BeforeInsert, ManyToMany } from "typeorm";
 import crypto from "crypto";
+import CrewEntity from "./crew.entity";
 
 @Entity("SHIP")
 export default class ShipEntity {
@@ -12,26 +13,29 @@ export default class ShipEntity {
         this.canMidParticipation = canMidParticipation;
     }
 
-    @PrimaryColumn({ type: "text", unique: true })
+    @PrimaryColumn({ name: "ID", type: "text", unique: true })
     id: string;
 
-    @Column({ type: "text" })
+    @Column({ name: "NAME", type: "text" })
     name: string;
 
-    @Column({ type: "text" })
+    @Column({ name: "CHANNEL_ID", type: "text" })
     channelId: string;
 
-    @Column({ type: "integer" })
+    @Column({ name: "CAPACITY", type: "integer" })
     capacity: number;
 
-    @Column({ type: "text" })
+    @Column({ name: "DESCRIPTION", type: "text" })
     description: string;
 
-    @Column({ type: "datetime", default: () => "STRFTIME('%Y%m%d%H', 'now', 'localtime')" })
+    @Column({ name: "CREATED_AT", type: "datetime", default: () => "STRFTIME('%Y%m%d%H', 'now', 'localtime')" })
     createdAt?: string;
 
-    @Column({ type: "text" })
+    @Column({ name: "CAN_MID_PARTICIPATION", type: "text" })
     canMidParticipation: string;
+
+    @ManyToMany(() => CrewEntity, (crew) => crew.ships)
+    crews?: CrewEntity[];
 
     @BeforeInsert()
     async generateId() {
