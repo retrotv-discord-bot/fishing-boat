@@ -113,7 +113,7 @@ export default class ShipService {
                 },
                 {
                     name: "중도참여 가능여부",
-                    value: newShip.canMidParticipation ? "가능" : "불가능",
+                    value: newShip.canMidParticipation === "Y" ? "가능" : "불가능",
                 },
             ],
             timestamp: new Date(),
