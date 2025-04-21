@@ -28,6 +28,9 @@ module.exports = {
             });
         }
 
+        alarmTime = alarmTime.replace(":", "");
+        alarmTime = alarmTime.replace(" ", "");
+
         const clientId = interaction.user.id;
         const clientName = interaction.user.username;
         const clientGlobalName = interaction.user.globalName;
@@ -456,16 +459,15 @@ module.exports = {
         try {
             await begin();
 
-            await crewRepository.remove(
-                await crewRepository.find({
-                    where: {
-                        ship: {
-                            name: shipName,
-                            channelId: channelId,
-                        },
+            const allCrews = await crewRepository.find({
+                where: {
+                    ship: {
+                        name: shipName,
+                        channelId: channelId,
                     },
-                }),
-            );
+                },
+            });
+            await crewRepository.remove(allCrews);
             await shipRepository.remove(ship);
 
             await commit();
