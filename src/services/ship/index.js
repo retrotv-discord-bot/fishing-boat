@@ -469,7 +469,23 @@ module.exports = {
                     },
                 },
             });
-            await crewRepository.remove(allCrews);
+            if (allCrews) {
+                await crewRepository.remove(allCrews);
+            }
+
+            // 알람 삭제
+            const allAlams = await alarmRepository.findOne({
+                where: {
+                    ship: {
+                        name: shipName,
+                        channelId: channelId,
+                    },
+                },
+            });
+            if (allAlams) {
+                await alarmRepository.remove(allAlams);
+            }
+
             await shipRepository.remove(ship);
 
             await commit();
