@@ -1,0 +1,7 @@
+{
+    "type": "sqlite",
+    "database": "fishing-vessel.sqlite",
+    "synchronize": true,
+    "logging": true,
+    "entities": ["src/entities/**/*.entity.ts"]
+}

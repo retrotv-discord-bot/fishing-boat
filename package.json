@@ -1,36 +1,33 @@
 {
-    "name": "fishing-boat",
-    "version": "0.0.1-alpha",
-    "description": "디스코드 어선 봇",
-    "keywords": [
-        "bot"
-    ],
-    "homepage": "https://github.com/retrotv-discord-bot/fishing-boat#readme",
-    "bugs": {
-        "url": "https://github.com/retrotv-discord-bot/fishing-boat/issues"
+    "name": "bun",
+    "module": "src/index.ts",
+    "type": "module",
+    "private": true,
+    "devDependencies": {
+        "@eslint/js": "^9.24.0",
+        "@types/bun": "latest",
+        "@types/node-schedule": "^2.1.7",
+        "eslint": "^9.24.0",
+        "eslint-config-prettier": "^10.1.2",
+        "eslint-plugin-prettier": "^5.2.6",
+        "globals": "^16.0.0",
+        "prettier": "^3.5.3",
+        "typescript-eslint": "^8.30.1"
     },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/retrotv-discord-bot/fishing-boat.git"
-    },
-    "license": "MIT",
-    "author": "yjj8353@gmail.com",
-    "type": "commonjs",
-    "main": "index.js",
-    "scripts": {
-        "start": "node index.js",
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "lint": "eslint .",
-        "format": "prettier --write ."
+    "peerDependencies": {
+        "typescript": "^5"
     },
     "dependencies": {
+        "@logtape/logtape": "^0.9.0",
         "discord.js": "^14.18.0",
-        "dotenv": "^16.5.0",
         "node-schedule": "^2.1.1",
-        "sqlite3": "^5.1.7"
+        "reflect-metadata": "^0.2.2",
+        "sqlite3": "^5.1.7",
+        "typeorm": "^0.3.22"
     },
-    "devDependencies": {
-        "eslint": "^9.24.0",
-        "prettier": "^3.5.3"
+    "scripts": {
+        "start": "bun run index.ts",
+        "lint": "eslint 'src/**/*.{js,ts}'",
+        "format": "prettier --write 'src/**/*.{js,ts}'"
     }
 }
