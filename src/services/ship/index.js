@@ -175,8 +175,10 @@ module.exports = {
 
         const crews = await crewRepository.find({
             where: {
-                shipName: shipName,
                 channelId: channelId,
+                ship: {
+                    shipName: shipName,
+                }
             },
         });
         if (crews.length >= ship.capacity) {
