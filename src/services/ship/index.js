@@ -176,7 +176,7 @@ module.exports = {
         const crews = await crewRepository.find({
             where: {
                 ship: {
-                    shipName: shipName,
+                    name: shipName,
                     channelId: channelId,
                 }
             },
