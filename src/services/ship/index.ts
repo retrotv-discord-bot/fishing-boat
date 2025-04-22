@@ -11,7 +11,6 @@ import Crew from "../../entities/crew";
 import Alarm from "../../entities/alarm";
 
 import Logger from "../../config/logtape";
-import type ShipEntity from "../../entities/ship.entity";
 
 export default class ShipService {
     private readonly log = Logger(["bot", "ShipService"]);
@@ -25,6 +24,7 @@ export default class ShipService {
         this.shipRepository = new ShipRepository();
     }
 
+    // 건조
     public createShip = async (interaction: any): Promise<void> => {
         const channelId = interaction.channelId;
         let alarmTime = interaction.options.getString("출항시간") ?? null;
@@ -74,7 +74,7 @@ export default class ShipService {
             const savedShip = await this.shipRepository.save(newShip.toEntity());
 
             // 선원(선장) 저장
-            const newCaptain = new Crew(interaction.user.id, interaction.user.username, interaction.user.globalName, savedShip.id, "선장");
+            const newCaptain = new Crew(interaction.user.id, interaction.user.username, interaction.user.globalName, "선장", [savedShip]);
             await this.crewRepository.save(newCaptain.toEntity());
 
             // 알람 저장
@@ -126,6 +126,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [shipEmbed] });
     };
 
+    // 침몰
     public sinking = async (interaction: any): Promise<void> => {
         const clientId = interaction.user.id;
         const shipName = interaction.options.getString("선명");
@@ -212,6 +213,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [shipEmbed] });
     };
 
+    // 목록
     public searchShips = async (interaction: any): Promise<void> => {
         const channelId = interaction.channelId;
         const ships = await this.shipRepository.find({
@@ -239,6 +241,7 @@ export default class ShipService {
         return interaction.reply({ embeds: shipEmbeds, ephemeral: true });
     };
 
+    // 선원목록
     public searchCrewsInShip = async (interaction: any): Promise<void> => {
         const shipName = interaction.options.getString("선명");
         const channelId = interaction.channelId;
@@ -286,6 +289,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [crewsEmbed], ephemeral: true });
     };
 
+    // 승선
     public embark = async (interaction: any): Promise<void> => {
         const crewId = interaction.user.id;
         const crewName = interaction.user.username;
@@ -311,7 +315,9 @@ export default class ShipService {
         const isExists = await this.crewRepository.exists({
             where: {
                 userId: crewId,
-                shipId: ship.id,
+                ships: {
+                    id: ship.id,
+                },
             },
         });
         if (isExists) {
@@ -403,6 +409,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [shipEmbed] });
     };
 
+    // 하선
     public disembark = async (interaction: any): Promise<void> => {
         const crewId = interaction.user.id;
         const shipName = interaction.options.getString("선명");
@@ -520,6 +527,7 @@ export default class ShipService {
         return interaction.reply({ embeds: [shipEmbed], ephemeral: true });
     };
 
+    // 호출
     public callingSailor = async (interaction: any): Promise<void> => {
         const channel = interaction.channel;
         const channelId = interaction.channelId;
@@ -553,6 +561,7 @@ export default class ShipService {
         });
     };
 
+    // 어선명 자동완성
     public getAllShips = async (shipsName: string, channelId: string, crewId?: string, position?: string): Promise<string[]> => {
         const queryBuilder = this.crewRepository
             .createQueryBuilder("crew")
@@ -568,8 +577,8 @@ export default class ShipService {
         }
 
         const results = await queryBuilder.getMany();
-        const ships = results.map((result) => result.ships) as unknown as ShipEntity[];
-        const uniqueShipNames = Array.from(new Set(ships.map((ship) => ship.name)));
+        const ships = results.filter((crew) => crew.ships !== undefined).flatMap((crew) => crew.ships);
+        const uniqueShipNames = Array.from(new Set(ships.filter((ship) => ship !== undefined).flatMap((ship) => ship.name)));
 
         return uniqueShipNames;
     };

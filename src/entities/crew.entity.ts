@@ -4,11 +4,12 @@ import ShipEntity from "./ship.entity";
 
 @Entity("CREW")
 export default class CrewEntity {
-    constructor(userId: string, username: string, userGlobalName: string, position: string) {
+    constructor(userId: string, username: string, userGlobalName: string, position: string, ships: ShipEntity[]) {
         this.userId = userId;
         this.username = username;
         this.userGlobalName = userGlobalName;
         this.position = position;
+        this.ships = ships;
     }
 
     @PrimaryColumn({ name: "USER_ID", type: "text" })
