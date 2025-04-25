@@ -1,5 +1,5 @@
 {
-    "name": "bun",
+    "name": "fishing-vessel-bot",
     "module": "src/index.ts",
     "type": "module",
     "private": true,
