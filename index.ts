@@ -58,4 +58,4 @@ schedule.scheduleJob("* * * * *", () => {
     alarmService.sendAlarm(client);
 });
 
-client.login(config.DISCORD_BOT_TOKEN);
+client.login(config.BOT_TOKEN);

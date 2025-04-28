@@ -2,14 +2,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const { DISCORD_BOT_TOKEN, CLIENT_ID, TO_REGISTER_GUILD } = process.env;
+const { BOT_TOKEN, BOT_ID } = process.env;
+let { GUILD_ID, PREFIX } = process.env;
 
-if (!DISCORD_BOT_TOKEN || !CLIENT_ID || !TO_REGISTER_GUILD) {
-  throw new Error("Missing environment variables");
+if (!BOT_TOKEN || !BOT_ID) {
+    throw new Error("Missing environment variables");
 }
 
+GUILD_ID ??= "";
+PREFIX ??= "!";
+
 export const config = {
-  DISCORD_BOT_TOKEN,
-  CLIENT_ID,
-  TO_REGISTER_GUILD,
+    BOT_TOKEN,
+    BOT_ID,
+    GUILD_ID,
+    PREFIX,
 };
