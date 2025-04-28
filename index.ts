@@ -10,7 +10,7 @@ import { config } from "./config";
 import { commands } from "./src/discord/commands";
 import type MessageCommand from "./src/types/MessageCommand";
 import { events } from "./src/discord/events";
-import type ApplicationCommand from "./src/types/ApplicationCommand";
+import type SlashCommand from "./src/types/slash-command";
 
 import AlarmService from "./src/services/alarm";
 
@@ -31,7 +31,7 @@ const client = Object.assign(
         partials: [Partials.Channel],
     }),
     {
-        commands: new Collection<string, ApplicationCommand>(),
+        commands: new Collection<string, SlashCommand>(),
         msgCommands: new Collection<string, MessageCommand>(),
     },
 );

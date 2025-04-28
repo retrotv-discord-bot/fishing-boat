@@ -2,12 +2,12 @@
 import { SlashCommandBuilder } from "discord.js";
 
 import ShipService from "../../../services/ship";
-import ApplicationCommand from "../../../types/ApplicationCommand";
+import SlashCommand from "../../../types/slash-command";
 
 const shipService = new ShipService();
 const { createShip, embark, disembark, sinking, searchShips, searchCrewsInShip, callingSailor, getAllShips } = shipService;
 
-export default new ApplicationCommand({
+export default new SlashCommand({
     data: new SlashCommandBuilder()
         .setName("어선")
         .setDescription("거기 당신! 지금 당장 어선에 오르시오!")
