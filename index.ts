@@ -8,7 +8,7 @@ import schedule from "node-schedule";
 import { config } from "./config";
 
 import { commands } from "./src/discord/commands";
-import type MessageCommand from "./src/types/MessageCommand";
+import type PrefixCommand from "./src/types/prefix-command";
 import { events } from "./src/discord/events";
 import type SlashCommand from "./src/types/slash-command";
 
@@ -25,21 +25,21 @@ const client = Object.assign(
         intents: [
             GatewayIntentBits.Guilds,
             // 현재 사용예정 없음
-            // , GatewayIntentBits.GuildMessages
-            // , GatewayIntentBits.DirectMessages
+            GatewayIntentBits.GuildMessages,
+            GatewayIntentBits.DirectMessages,
         ],
         partials: [Partials.Channel],
     }),
     {
-        commands: new Collection<string, SlashCommand>(),
-        msgCommands: new Collection<string, MessageCommand>(),
+        slashCommands: new Collection<string, SlashCommand>(),
+        prefixCommands: new Collection<string, PrefixCommand>(),
     },
 );
 
 // 커맨드 불러오기
 commands.forEach((command) => {
     log.debug(`로드된 커맨드: ${command.data.name}`);
-    client.commands.set(command.data.name, command);
+    client.slashCommands.set(command.data.name, command);
 });
 
 // 이벤트 불러오기
