@@ -1,0 +1,13 @@
+{
+  "apps": [
+    {
+      "name": "Discord Bot",
+      "script": "index.ts",
+      "interpreter": "./node_modules/.bin/ts-node",
+      "instances": "1",
+      "watch": [ "src", "index.ts" ],
+      "auto_restart": true,
+      "ignore_watch": [ "node_modules" ]
+    }
+  ]
+}
