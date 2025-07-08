@@ -1,7 +1,7 @@
 {
-  "name": "discord-bot-template",
-  "version": "1.0.0-beta",
-  "description": "Discord.js template",
+  "name": "fishing-boat",
+  "version": "2.0.0-beta",
+  "description": "디스코드용 어선 봇",
   "license": "Apache-2.0",
   "author": "yjj8353@gmail.com",
   "type": "commonjs",
@@ -17,9 +17,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@prisma/client": "^6.7.0",
-    "discord.js": "^14.19.2",
-    "dotenv": "^16.5.0",
+    "@logtape/logtape": "^1.0.1",
+    "@prisma/client": "^6.11.0",
+    "discord.js": "^14.21.0",
+    "dotenv": "^17.0.1",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
@@ -31,6 +32,6 @@
     "eslint-plugin-prettier": "^5.2.6",
     "pm2": "^6.0.5",
     "prettier": "^3.5.3",
-    "prisma": "^6.7.0"
+    "prisma": "^6.11.0"
   }
 }

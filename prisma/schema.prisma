@@ -10,10 +10,50 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = "file:./bot.db"
+  url      = "file:./fishing-vessel.db"
 }
 
-model User {
-  id        Int     @id @default(autoincrement())
-  username  String
+model Vessels {
+  id                  String   @id @map("ID")
+  name                String   @map("NAME")
+  channelId           String   @map("CHANNEL_ID")
+  capacity            Int      @map("CAPACITY")
+  description         String   @map("DESCRIPTION")
+  createdAt           DateTime @default(now()) @map("CREATED_AT")
+  canMidParticipation String   @map("CAN_MID_PARTICIPATION")
+  crews               VesselsCrews[]
+  alarm               Alarms?
+
+  @@map("VESSELS")
+}
+
+model Crews {
+  id         String @id @map("ID")
+  name       String @map("NAME")
+  globalName String @map("GLOBAL_NAME")
+  vessels          VesselsCrews[]
+
+  @@map("CREWS")
+}
+
+model VesselsCrews {
+  vesselId  String  @map("VESSEL_ID")
+  crewId    String  @map("CREW_ID")
+  position  String  @map("POSITION")
+
+  vessel  Vessels @relation(fields: [vesselId], references: [id])
+  crew    Crews   @relation(fields: [crewId], references: [id])
+
+  @@id([vesselId, crewId])
+  @@map("VESSELS_CREWS")
+}
+
+model Alarms {
+  vesselId  String  @map("VESSEL_ID") @unique
+  alarmTime String  @map("ALARM_TIME")
+  use       String  @default("Y") @map("USE")
+  vessel    Vessels @relation(fields: [vesselId], references: [id])
+
+  @@id([vesselId, alarmTime])
+  @@map("ALARMS")
 }
