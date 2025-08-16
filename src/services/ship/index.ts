@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
 import prisma from "../../config/datasource";
 
@@ -8,10 +7,15 @@ import Logger from "../../config/logtape";
 import { MessageFlags } from "discord.js";
 
 import { digestSha3512 } from "../../utils/cryptography";
-import Vessel from "../../entities/vessel.entity";
 import VesselRepository from "../../repositories/vessel.repository";
 import AlarmRepository from "../../repositories/alarm.repository";
 import CrewRepository from "../../repositories/crew.repository";
+import CrewEntity from "../../entities/crew.entity";
+import AlarmEntity from "../../entities/alarm.entity";
+import Vessel from "../../entities/vessel";
+import VesselEntity from "../../entities/vessel.entity";
+import VesselCrewRepository from "../../repositories/vesselCrew.repository";
+import VesselCrewEntity from "../../entities/vesselCrew.entity";
 
 export default class ShipService {
     private readonly client: PrismaClient;
@@ -30,8 +34,8 @@ export default class ShipService {
     // 건조
     public createShip = async (interaction: any): Promise<void> => {
         const channelId = interaction.channelId;
-        let alarmTime = interaction.options.getString("출항시간") ?? null;
-        let canMidParticipation = interaction.options.getBoolean("중참가능여부") ?? null;
+        let alarmTime = interaction.options.getString("출항시간");
+        let canMidParticipation = interaction.options.getBoolean("중참가능여부");
 
         if (alarmTime !== null) {
             // 출항 시간에 대한 유효성 검증
@@ -59,14 +63,14 @@ export default class ShipService {
         const vesselName = interaction.options.getString("선명");
         const vesselCapacity = interaction.options.getInteger("인원수");
         const vesselDescription = interaction.options.getString("설명") ?? "설명이 없습니다.";
-        const newVessel: Vessel = {
-            id: digestSha3512(vesselName + channelId),
-            name: vesselName,
-            channelId: channelId,
-            capacity: vesselCapacity,
-            description: vesselDescription,
-            canMidParticipation: canMidParticipation,
-        };
+        const newVessel: Vessel = new VesselEntity(
+            digestSha3512(vesselName + channelId),
+            vesselName,
+            channelId,
+            vesselCapacity,
+            vesselDescription,
+            canMidParticipation,
+        );
 
         // 동일한 채널에 같은 이름의 어선이 존재하는지 확인
         if (await this.vesselRespository.isExists(newVessel.name, channelId)) {
@@ -76,24 +80,42 @@ export default class ShipService {
             });
         }
 
-        const captain = {
-            id: interaction.user.id,
-            name: interaction.user.username,
-            globalName: interaction.user.globalName,
-        };
+        const captain = new CrewEntity(
+            interaction.user.id,
+            interaction.user.username,
+            interaction.user.globalName,
+        );
 
-        let alarm;
+        let alarm: AlarmEntity | null = null;
         if (alarmTime !== null) {
-            alarm = {
-                vesselId: newVessel.id,
-                alarmTime: alarmTime,
-                use: "Y",
-            };
+            alarm = new AlarmEntity(
+                newVessel.id,
+                alarmTime,
+                "Y",
+            );
         }
 
         let savedVessel;
         try {
-            savedVessel = await this.vesselRespository.createNewVessel(newVessel, captain, alarm);
+            savedVessel = await this.client.$transaction(async (tx) => {
+                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+                const txCrewRepository = new CrewRepository(tx as PrismaClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
+
+                const v = await txVesselRepository.save(newVessel);
+                await txCrewRepository.save(captain);
+
+                // 3. VesselCrew 관계 저장 (선장으로 등록)
+                await txVesselCrewRepository.save(new VesselCrewEntity(v.id, captain.id, "선장"));
+
+                // 4. 알람 저장 (선택적)
+                if (alarm !== null) {
+                    await txAlarmRepository.save(alarm);
+                }
+
+                return v;
+            });
         } catch (err: unknown) {
             if (err instanceof Error) {
                 this.log.error("Error: " + err.message);
@@ -103,8 +125,6 @@ export default class ShipService {
                 content: "어선 생성에 실패했습니다.",
                 flags: MessageFlags.Ephemeral,
             });
-        } finally {
-            this.client.$disconnect();
         }
 
         const vesselEmbed = {
@@ -152,7 +172,11 @@ export default class ShipService {
 
         // 어선 삭제
         try {
-            await this.vesselRespository.deleteVessel(vessel.id);
+            this.client.$transaction(async (tx) => {
+                const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                await txVesselRepository.deleteVessel(vessel.id);
+            });
+
             this.log.info("어선이 성공적으로 침몰되었습니다.");
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -160,8 +184,6 @@ export default class ShipService {
             }
 
             return interaction.reply({ content: "어선이 침몰하지 않았습니다.", flags: MessageFlags.Ephemeral });
-        } finally {
-            this.client.$disconnect();
         }
 
         const vesselEmbed = {
@@ -297,7 +319,11 @@ export default class ShipService {
                 name: crewName,
                 globalName: crewGlobalName,
             };
-            await this.crewRepository.embarkCrew(newCrew, vessel.id);
+
+            this.client.$transaction(async (tx) => {
+                const txCrewRepository = new CrewRepository(tx as PrismaClient);
+                await txCrewRepository.embarkCrew(newCrew, vessel.id);
+            })
 
             this.log.debug("===== 어선 승선 완료 =====");
         } catch (err) {
@@ -374,7 +400,6 @@ export default class ShipService {
                     },
                 });
 
-                // 하선한 선원의 역할이 선장일 경우, 어선도 같이 침몰
                 if (crew.vessels[0].position === "선장") {
                     this.log.info("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
 

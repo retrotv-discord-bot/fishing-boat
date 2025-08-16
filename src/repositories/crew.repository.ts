@@ -1,15 +1,37 @@
 import { PrismaClient } from "@prisma/client";
-import Crew from "../entities/crew.entity";
+import Crew from "../entities/crew";
+import CrewEntity from "../entities/crew.entity";
+import Logger from "../config/logtape";
 
 export default class CrewRepository {
     private readonly client: PrismaClient;
+    private readonly log = Logger(["bot", "CrewRepository"]);
 
     constructor(client: PrismaClient) {
         this.client = client;
     }
 
+    public async save(crew: Crew): Promise<CrewEntity> {
+        let savedCrew: CrewEntity | null = await this.client.crews.findUnique({
+            where: {
+                id: crew.id,
+            },
+        });
+
+        // 이미 존재하는 선원인 경우, 해당 엔티티를 반환함
+        if (savedCrew !== null) {
+            return savedCrew;
+        }
+
+        savedCrew = await this.client.crews.create({
+            data: crew
+        });
+
+        return savedCrew;
+    }
+
     public async findCrewById(crewId: string): Promise<Crew | null> {
-        return await this.client.crews.findUnique({
+        return this.client.crews.findUnique({
             where: {
                 id: crewId,
             },
@@ -17,7 +39,7 @@ export default class CrewRepository {
     }
 
     public async findCrewsOnVessel(vesselName: string, channelId: string): Promise<Crew[]> {
-        return await this.client.crews.findMany({
+        return this.client.crews.findMany({
             where: {
                 vessels: {
                     some: {
@@ -32,7 +54,7 @@ export default class CrewRepository {
     }
 
     public async findCrewsOnVesselByVesselId(vesselId: string): Promise<Crew[]> {
-        return await this.client.crews.findMany({
+        return this.client.crews.findMany({
             where: {
                 vessels: {
                     some: {

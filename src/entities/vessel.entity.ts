@@ -6,7 +6,7 @@ export default class VesselEntity implements Vessel {
     channelId: string;
     capacity: number;
     description: string;
-    createdAt: Date;
+    createdAt?: Date;
     canMidParticipation: string;
 
     constructor(

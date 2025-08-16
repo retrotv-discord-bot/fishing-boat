@@ -1,45 +1,43 @@
 import { PrismaClient } from "@prisma/client";
-import Alarm from "../entities/alarm.entity";
+import Alarm from "../entities/alarm";
+import Logger from "../config/logtape";
 
 export default class AlarmRepository {
     private readonly client: PrismaClient;
+    private readonly log = Logger(["bot", "AlarmRepository"]);
 
     constructor(client: PrismaClient) {
         this.client = client;
     }
 
     public async save(alarm: Alarm): Promise<Alarm> {
-        const ship = await this.client.alarms.findFirst({
+        let savedAlarm: Alarm | null = await this.client.alarms.findUnique({
             where: {
                 vesselId: alarm.vesselId,
             },
         });
 
-        const savedAlarm = await this.client.$transaction(async (tx) => {
-            if (ship !== null) {
-                return await tx.alarms.update({
-                    where: {
-                        vesselId: alarm.vesselId,
-                    },
-                    data: {
-                        alarmTime: alarm.alarmTime,
-                        use: alarm.use,
-                    },
-                });
-            }
-
-            return await tx.alarms.create({
+        if (savedAlarm !== null) {
+            savedAlarm = await this.client.alarms.update({
+                where: {
+                    vesselId: alarm.vesselId,
+                },
+                data: {
+                    alarmTime: alarm.alarmTime,
+                    use: alarm.use,
+                },
+            });
+        } else {
+            savedAlarm = await this.client.alarms.create({
                 data: alarm,
             });
-        });
-
-        this.client.$disconnect();
+        }
 
         return savedAlarm;
     }
 
     public async findByVesselId(vesselId: string): Promise<Alarm | null> {
-        return await this.client.alarms.findUnique({
+        return this.client.alarms.findUnique({
             where: {
                 vesselId: vesselId,
             },
@@ -54,7 +52,7 @@ export default class AlarmRepository {
         const currentTime = currentHour + currentMinute;
 
         // 현재 시간과 동일하거나 이전인 알람들을 조회
-        return await this.client.alarms.findMany({
+        return this.client.alarms.findMany({
             where: {
                 alarmTime: {
                     lte: currentTime,

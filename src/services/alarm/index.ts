@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { PrismaClient } from "@prisma/client";
 import prisma from "../../config/datasource";
 
@@ -16,7 +15,7 @@ export default class AlarmService {
 
     public constructor() {
         this.client = prisma;
-        this.alarmRepository = new AlarmRepository(this.client);
+        this.alarmRepository = new AlarmRepository(this.client); 
         this.crewRepository = new CrewRepository(this.client);
         this.vesselRepository = new VesselRepository(this.client);
     }
@@ -30,10 +29,10 @@ export default class AlarmService {
         }
 
         // 알람 작동
-        alarms.forEach(async (alarm) => {
+        for (const alarm of alarms) {
             const vessel = await this.vesselRepository.findById(alarm.vesselId);
             if (vessel === null) {
-                return;
+                continue;
             }
 
             const vesselName = vessel.name;
@@ -41,7 +40,7 @@ export default class AlarmService {
 
             const crews = await this.crewRepository.findCrewsOnVessel(vesselName, channelId);
             if (crews.length === 0) {
-                return;
+                continue;
             }
 
             const crewIds = crews.map((crew) => crew.id);
@@ -58,10 +57,13 @@ export default class AlarmService {
             }
 
             try {
-                const updatedAlarm = await this.alarmRepository.save({
-                    vesselId: alarm.vesselId,
-                    alarmTime: alarm.alarmTime,
-                    use: "N",
+                const updatedAlarm = await this.client.$transaction(async (tx) => {
+                    const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+                    return await txAlarmRepository.save({
+                        vesselId: alarm.vesselId,
+                        alarmTime: alarm.alarmTime,
+                        use: "N",
+                    });
                 });
 
                 this.log.debug(`${vesselName} 어선에 알람 보냄`);
@@ -71,6 +73,6 @@ export default class AlarmService {
                     this.log.error("Error: " + err);
                 }
             }
-        });
+        }
     };
 }
