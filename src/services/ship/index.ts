@@ -21,14 +21,14 @@ export default class ShipService {
     private readonly client: PrismaClient;
     private readonly alarmsRepository;
     private readonly crewRepository;
-    private readonly vesselRespository;
+    private readonly vesselRepository;
     private readonly log = Logger(["bot", "ShipService"]);
 
     public constructor() {
         this.client = prisma;
         this.alarmsRepository = new AlarmRepository(this.client);
         this.crewRepository = new CrewRepository(this.client);
-        this.vesselRespository = new VesselRepository(this.client);
+        this.vesselRepository = new VesselRepository(this.client);
     }
 
     // 건조
@@ -48,8 +48,8 @@ export default class ShipService {
                 });
             }
 
-            alarmTime = alarmTime?.replace(/ /g, "");
-            alarmTime = alarmTime?.replace(/:/g, "");
+            alarmTime = alarmTime?.replaceAll(" ", "");
+            alarmTime = alarmTime?.replaceAll(":", "");
         }
 
         // 중참여부 조정
@@ -73,7 +73,7 @@ export default class ShipService {
         );
 
         // 동일한 채널에 같은 이름의 어선이 존재하는지 확인
-        if (await this.vesselRespository.isExists(newVessel.name, channelId)) {
+        if (await this.vesselRepository.isExists(newVessel.name, channelId)) {
             return interaction.reply({
                 content: "이미 존재하는 어선입니다.",
                 flags: MessageFlags.Ephemeral,
@@ -161,7 +161,7 @@ export default class ShipService {
         const channelId = interaction.channelId;
 
         // 어선 조회
-        const vessel = await this.vesselRespository.findByNameAndChannelId(vesselName, channelId);
+        const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);
         if (vessel === null) {
             return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", flags: MessageFlags.Ephemeral });
         }
@@ -202,7 +202,7 @@ export default class ShipService {
     // 목록
     public searchShips = async (interaction: any): Promise<void> => {
         const channelId = interaction.channelId;
-        const vessels = await this.vesselRespository.findByChannelId(channelId);
+        const vessels = await this.vesselRepository.findByChannelId(channelId);
         if (vessels.length === 0) {
             return interaction.reply({ content: "어선이 존재하지 않습니다.", flags: MessageFlags.Ephemeral });
         }
@@ -228,7 +228,7 @@ export default class ShipService {
         const channelId = interaction.channelId;
 
         // 어선 조회
-        const vessel = await this.vesselRespository.findByNameAndChannelId(vesselName, channelId);
+        const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);
         if (vessel === null) {
             return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", flags: MessageFlags.Ephemeral });
         }
@@ -267,7 +267,7 @@ export default class ShipService {
         const channelId = interaction.channelId;
 
         // 어선 조회
-        const vessel = await this.vesselRespository.findByNameAndChannelId(vesselName, channelId);
+        const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);
         if (vessel === null) {
             return interaction.reply({
                 content: "해당 어선이 존재하지 않습니다.",
@@ -297,7 +297,7 @@ export default class ShipService {
                 const now = new Date();
                 const nowHHMM = now.getHours() * 100 + now.getMinutes();
 
-                if (nowHHMM >= parseInt(alarmTime.alarmTime)) {
+                if (nowHHMM >= Number.parseInt(alarmTime.alarmTime)) {
                     return interaction.reply({
                         content: "어선의 출항시간이 지나서 승선할 수 없습니다!",
                         flags: MessageFlags.Ephemeral,
