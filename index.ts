@@ -1,3 +1,5 @@
+import schedule from "node-schedule";
+
 import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 import ContextMenuCommand from "./src/templates/context-menu-command";
 import SlashCommand from "./src/templates/slash-command";
@@ -6,6 +8,8 @@ import PrefixCommand from "./src/templates/prefix-command";
 import { contextMenuCommands, slashCommands, prefixCommands } from "./src/discord/commands";
 import { events } from "./src/discord/events";
 import { config } from "./config";
+
+import AlarmService from "./src/services/alarm";
 
 declare global {
     // prettier-ignore
@@ -90,6 +94,12 @@ events.forEach((event) => {
     } else {
         client.on(event.name, (...args) => event.execute(...args));
     }
+});
+
+const alarmService = new AlarmService();
+
+schedule.scheduleJob("* * * * *", () => {
+    alarmService.sendAlarm(client);
 });
 
 // 봇 로그인
