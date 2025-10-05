@@ -37,3 +37,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 prisma/migrations/
 prisma/bot.db
 prisma/bot.db-journal
+
+# Database
+*.sqlite
