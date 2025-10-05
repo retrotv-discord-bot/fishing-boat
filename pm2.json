@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "name": "어선 봇",
+      "name": "Fishing Vessel",
       "script": "index.ts",
       "interpreter": "./node_modules/.bin/ts-node",
       "instances": "1",
