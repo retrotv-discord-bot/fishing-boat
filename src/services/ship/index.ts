@@ -80,19 +80,11 @@ export default class ShipService {
             });
         }
 
-        const captain = new CrewEntity(
-            interaction.user.id,
-            interaction.user.username,
-            interaction.user.globalName,
-        );
+        const captain = new CrewEntity(interaction.user.id, interaction.user.username, interaction.user.globalName);
 
         let alarm: AlarmEntity | null = null;
         if (alarmTime !== null) {
-            alarm = new AlarmEntity(
-                newVessel.id,
-                alarmTime,
-                "Y",
-            );
+            alarm = new AlarmEntity(newVessel.id, alarmTime, "Y");
         }
 
         let savedVessel;
@@ -172,7 +164,7 @@ export default class ShipService {
 
         // 어선 삭제
         try {
-            this.client.$transaction(async (tx) => {
+            await this.client.$transaction(async (tx) => {
                 const txVesselRepository = new VesselRepository(tx as PrismaClient);
                 await txVesselRepository.deleteVessel(vessel.id);
             });
@@ -320,10 +312,10 @@ export default class ShipService {
                 globalName: crewGlobalName,
             };
 
-            this.client.$transaction(async (tx) => {
+            await this.client.$transaction(async (tx) => {
                 const txCrewRepository = new CrewRepository(tx as PrismaClient);
                 await txCrewRepository.embarkCrew(newCrew, vessel.id);
-            })
+            });
 
             this.log.debug("===== 어선 승선 완료 =====");
         } catch (err) {
@@ -481,7 +473,7 @@ export default class ShipService {
                 flags: MessageFlags.Ephemeral,
             });
         } finally {
-            this.client.$disconnect();
+            await this.client.$disconnect();
         }
 
         const shipEmbed = {

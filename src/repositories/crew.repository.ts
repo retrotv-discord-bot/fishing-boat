@@ -24,14 +24,14 @@ export default class CrewRepository {
         }
 
         savedCrew = await this.client.crews.create({
-            data: crew
+            data: crew,
         });
 
         return savedCrew;
     }
 
     public async findCrewById(crewId: string): Promise<Crew | null> {
-        return this.client.crews.findUnique({
+        return await this.client.crews.findUnique({
             where: {
                 id: crewId,
             },
@@ -39,7 +39,7 @@ export default class CrewRepository {
     }
 
     public async findCrewsOnVessel(vesselName: string, channelId: string): Promise<Crew[]> {
-        return this.client.crews.findMany({
+        return await this.client.crews.findMany({
             where: {
                 vessels: {
                     some: {
@@ -54,7 +54,7 @@ export default class CrewRepository {
     }
 
     public async findCrewsOnVesselByVesselId(vesselId: string): Promise<Crew[]> {
-        return this.client.crews.findMany({
+        return await this.client.crews.findMany({
             where: {
                 vessels: {
                     some: {
