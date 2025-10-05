@@ -63,7 +63,7 @@ export default class AlarmService {
             }
 
             try {
-                const updatedAlarm = await this.client.$transaction(async (tx) => {
+                await this.client.$transaction(async (tx) => {
                     const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
                     return await txAlarmRepository.save({
                         vesselId: alarm.vesselId,
@@ -73,7 +73,6 @@ export default class AlarmService {
                 });
 
                 this.log.debug(`${vesselName} 어선에 알람 보냄`);
-                this.log.debug(`작동이 꺼진 알람의 정보: ${JSON.stringify(updatedAlarm)}`);
             } catch (err: unknown) {
                 if (err instanceof Error) {
                     this.log.error("Error: " + err);

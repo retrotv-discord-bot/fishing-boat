@@ -17,8 +17,6 @@ export default class VesselRepository {
             },
         });
 
-        this.log.debug(`저장할 어선 정보: ${JSON.stringify(vessel)}`);
-
         // 이미 존재하는 어선인 경우, 예외 발생
         if (savedVessel !== null) {
             this.log.debug("이미 존재하는 어선입니다.");
@@ -30,7 +28,6 @@ export default class VesselRepository {
         });
 
         this.log.info("어선이 성공적으로 저장되었습니다.");
-        this.log.debug(`저장된 어선 정보: ${JSON.stringify(savedVessel)}`);
 
         return savedVessel;
     }
