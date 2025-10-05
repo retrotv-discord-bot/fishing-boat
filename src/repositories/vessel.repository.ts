@@ -34,7 +34,7 @@ export default class VesselRepository {
     }
 
     public async findById(id: string): Promise<Vessel | null> {
-        return this.client.vessels.findUnique({
+        return await this.client.vessels.findUnique({
             where: {
                 id,
             },
@@ -42,7 +42,7 @@ export default class VesselRepository {
     }
 
     public async findByNameAndChannelId(vesselName: string, channelId: string): Promise<Vessel | null> {
-        return this.client.vessels.findFirst({
+        return await this.client.vessels.findFirst({
             where: {
                 name: vesselName,
                 channelId: channelId,
@@ -51,7 +51,7 @@ export default class VesselRepository {
     }
 
     public async findByChannelId(channelId: string): Promise<Vessel[]> {
-        return this.client.vessels.findMany({
+        return await this.client.vessels.findMany({
             where: {
                 channelId: channelId,
             },

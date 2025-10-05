@@ -37,7 +37,7 @@ export default class AlarmRepository {
     }
 
     public async findByVesselId(vesselId: string): Promise<Alarm | null> {
-        return this.client.alarms.findUnique({
+        return await this.client.alarms.findUnique({
             where: {
                 vesselId: vesselId,
             },
@@ -52,7 +52,7 @@ export default class AlarmRepository {
         const currentTime = currentHour + currentMinute;
 
         // 현재 시간과 동일하거나 이전인 알람들을 조회
-        return this.client.alarms.findMany({
+        return await this.client.alarms.findMany({
             where: {
                 alarmTime: {
                     lte: currentTime,
