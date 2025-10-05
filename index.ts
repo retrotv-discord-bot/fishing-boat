@@ -52,8 +52,8 @@ global.client = Object.assign(
 
             // Prefix 명령어를 사용하기 위해 필요
             // Needed to use prefix commands
-            GatewayIntentBits.GuildMessages,
-            GatewayIntentBits.MessageContent,
+            // GatewayIntentBits.GuildMessages,
+            // GatewayIntentBits.MessageContent,
         ],
         partials: [Partials.Channel],
     }),
