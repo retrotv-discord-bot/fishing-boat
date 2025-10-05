@@ -15,25 +15,31 @@ export default class AlarmService {
 
     public constructor() {
         this.client = prisma;
-        this.alarmRepository = new AlarmRepository(this.client); 
+        this.alarmRepository = new AlarmRepository(this.client);
         this.crewRepository = new CrewRepository(this.client);
         this.vesselRepository = new VesselRepository(this.client);
     }
 
     public sendAlarm = async (client: any): Promise<void> => {
         // 현재 시간과 동일하거나 이전인 알람들을 조회
-        const alarms = await this.alarmRepository.findAlarmsTriggerd();
+        const alarms = await this.alarmRepository.findAlarmsTriggered();
 
         if (alarms.length === 0) {
             return;
         }
 
+        this.log.info(`알람이 ${alarms.length}개 있습니다.`);
+
         // 알람 작동
         for (const alarm of alarms) {
             const vessel = await this.vesselRepository.findById(alarm.vesselId);
             if (vessel === null) {
+                this.log.info(`알람이 설정된 어선 ${alarm.vesselId} 이 존재하지 않습니다.`);
                 continue;
             }
+
+            this.log.info(`어선 명: ${vessel.name}`);
+            this.log.info(`채널 ID: ${vessel.channelId}`);
 
             const vesselName = vessel.name;
             const channelId = vessel.channelId;

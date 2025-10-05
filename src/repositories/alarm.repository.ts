@@ -44,7 +44,7 @@ export default class AlarmRepository {
         });
     }
 
-    public async findAlarmsTriggerd(): Promise<Alarm[]> {
+    public async findAlarmsTriggered(): Promise<Alarm[]> {
         // 현재 시간을 HHMM 형식으로 변환
         const now = new Date();
         const currentHour = String(now.getHours()).padStart(2, "0");

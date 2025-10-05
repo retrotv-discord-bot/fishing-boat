@@ -427,7 +427,7 @@ export default class ShipService {
                     this.log.debug("모든 유저를 삭제했습니다.");
 
                     // 알람 삭제
-                    const allAlams = await tx.alarms.findMany({
+                    const allAlarms = await tx.alarms.findMany({
                         where: {
                             vessel: {
                                 name: shipName,
@@ -435,8 +435,8 @@ export default class ShipService {
                             },
                         },
                     });
-                    if (allAlams) {
-                        const deleteConditions = allAlams.map((alarm) => ({
+                    if (allAlarms) {
+                        const deleteConditions = allAlarms.map((alarm) => ({
                             vesselId: alarm.vesselId,
                             alarmTime: alarm.alarmTime,
                         }));
