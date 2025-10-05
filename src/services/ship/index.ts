@@ -374,21 +374,22 @@ export default class ShipService {
         let isCaptain = false;
         try {
             await this.client.$transaction(async (tx) => {
+                const vessel = await this.vesselRepository.findByNameAndChannelId(shipName, channelId);
+
+                if (vessel === null) {
+                    return interaction.reply({
+                        content: "해당 어선이 존재하지 않습니다.",
+                        flags: MessageFlags.Ephemeral,
+                    });
+                }
+
                 // 어선 하선
-                await tx.crews.delete({
+                await tx.vesselsCrews.delete({
                     where: {
-                        id: crew.id,
-                        vessels: {
-                            some: {
-                                vessel: {
-                                    name: shipName,
-                                    channelId: channelId,
-                                },
-                            },
+                        vesselId_crewId: {
+                            vesselId: vessel.id,
+                            crewId: crew.id,
                         },
-                    },
-                    include: {
-                        vessels: true,
                     },
                 });
 
