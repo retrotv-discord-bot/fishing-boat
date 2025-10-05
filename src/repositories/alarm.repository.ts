@@ -13,17 +13,22 @@ export default class AlarmRepository {
     public async save(alarm: Alarm): Promise<Alarm> {
         let savedAlarm: Alarm | null = await this.client.alarms.findUnique({
             where: {
-                vesselId: alarm.vesselId,
+                vesselId_alarmTime: {
+                    vesselId: alarm.vesselId,
+                    alarmTime: alarm.alarmTime,
+                },
             },
         });
 
         if (savedAlarm !== null) {
             savedAlarm = await this.client.alarms.update({
                 where: {
-                    vesselId: alarm.vesselId,
+                    vesselId_alarmTime: {
+                        vesselId: alarm.vesselId,
+                        alarmTime: alarm.alarmTime,
+                    },
                 },
                 data: {
-                    alarmTime: alarm.alarmTime,
                     use: alarm.use,
                 },
             });
