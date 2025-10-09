@@ -97,21 +97,25 @@ export default class CrewRepository {
             },
         });
 
-        this.log.debug(`crew id: ${crew?.id}`);
-
         return crew !== null;
     }
 
     public async embarkCrew(crew: Crew, vesselId: string): Promise<Crew> {
         const isExists = await this.isExists(crew.id);
+
+        this.log.debug(`승선 여부: ${isExists}`);
+
         const txResult = await this.client.$transaction(async (tx) => {
+            this.log.debug("새로운 선원 추가 트랜잭션 시작");
             let newCrew = crew;
             if (!isExists) {
                 newCrew = await tx.crews.create({
                     data: crew,
                 });
             }
+            this.log.debug("선원 추가 완료");
 
+            this.log.debug("선원-어선 매핑 추가 트랜잭션 시작");
             const newVesselCrew = await tx.vesselsCrews.create({
                 data: {
                     vesselId: vesselId,
@@ -119,6 +123,7 @@ export default class CrewRepository {
                     position: "선원",
                 },
             });
+            this.log.debug("선원-어선 매핑 추가 완료");
 
             return { newCrew, newVesselCrew };
         });
