@@ -76,4 +76,58 @@ export default class VesselRepository {
             })) !== null
         );
     }
+
+    public async findVesselsName(
+        shipsName: string,
+        channelId: string,
+        crewId?: string,
+        position?: string,
+    ): Promise<string[]> {
+        /*
+         * select
+         *  from CREW C
+         * inner join SHIP_CREW SC on C.USER_ID = SC.CREW_ID
+         * inner join SHIP S on SC.SHIP_ID = S.SHIP_ID
+         * where S.NAME like '%' || :shipsName || '%'
+         *   and S.CHANNEL_ID = :channelId
+         *   and C.USER_ID    = :crewId       -- optional
+         *   and SC.POSITION  = :position     -- optional
+         */
+        const results = await this.client.crews.findMany({
+            where: {
+                vessels: {
+                    some: {
+                        vessel: {
+                            name: {
+                                contains: shipsName,
+                            },
+                            channelId: channelId,
+                        },
+
+                        // position 컬럼을 optional로 필터링
+                        ...(position ? { position: position } : {}),
+                    },
+                },
+                ...(crewId ? { id: crewId } : {}),
+            },
+            include: {
+                vessels: {
+                    include: {
+                        vessel: true,
+                    },
+                },
+            },
+        });
+
+        const uniqueShipNames: string[] = [];
+        results.forEach((crew) => {
+            crew.vessels.forEach((crewShip) => {
+                if (crewShip.vessel.name && !uniqueShipNames.includes(crewShip.vessel.name)) {
+                    uniqueShipNames.push(crewShip.vessel.name);
+                }
+            });
+        });
+
+        return uniqueShipNames;
+    }
 }

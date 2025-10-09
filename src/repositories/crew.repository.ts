@@ -50,6 +50,9 @@ export default class CrewRepository {
                     },
                 },
             },
+            include: {
+                vessels: true,
+            },
         });
     }
 

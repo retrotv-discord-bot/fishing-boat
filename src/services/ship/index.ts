@@ -318,17 +318,18 @@ export default class ShipService {
                 await txCrewRepository.embarkCrew(newCrew, vessel.id);
             });
 
-            this.client.$disconnect();
-
             this.log.debug("===== 어선 승선 완료 =====");
         } catch (err) {
             if (err instanceof Error) {
                 this.log.error("Error: " + err.message);
             }
+
             return interaction.reply({
                 content: "어선 승선에 실패했습니다.",
                 flags: MessageFlags.Ephemeral,
             });
+        } finally {
+            this.client.$disconnect();
         }
 
         const shipEmbed = {
@@ -515,22 +516,7 @@ export default class ShipService {
         const shipName = interaction.options.getString("선명");
 
         // 어선에 탑승한 선원들 조회
-        const crews = await this.client.crews.findMany({
-            where: {
-                vessels: {
-                    some: {
-                        vessel: {
-                            name: shipName,
-                            channelId: channelId,
-                        },
-                    },
-                },
-            },
-            include: {
-                vessels: true,
-            },
-        });
-
+        const crews = await this.crewRepository.findCrewsOnVessel(shipName, channelId);
         if (crews.length === 0) {
             return interaction.reply({
                 content: "해당 어선에 탑승한 선원이 없습니다.",
@@ -556,51 +542,6 @@ export default class ShipService {
         crewId?: string,
         position?: string,
     ): Promise<string[]> => {
-        /*
-         * select
-         *  from CREW C
-         * inner join SHIP_CREW SC on C.USER_ID = SC.CREW_ID
-         * inner join SHIP S on SC.SHIP_ID = S.SHIP_ID
-         * where S.NAME like '%' || :shipsName || '%'
-         *   and S.CHANNEL_ID = :channelId
-         *   and C.USER_ID    = :crewId       -- optional
-         *   and SC.POSITION  = :position     -- optional
-         */
-        const results = await this.client.crews.findMany({
-            where: {
-                vessels: {
-                    some: {
-                        vessel: {
-                            name: {
-                                contains: shipsName,
-                            },
-                            channelId: channelId,
-                        },
-
-                        // position 컬럼을 optional로 필터링
-                        ...(position ? { position: position } : {}),
-                    },
-                },
-                ...(crewId ? { id: crewId } : {}),
-            },
-            include: {
-                vessels: {
-                    include: {
-                        vessel: true,
-                    },
-                },
-            },
-        });
-
-        const uniqueShipNames: string[] = [];
-        results.forEach((crew) => {
-            crew.vessels.forEach((crewShip) => {
-                if (crewShip.vessel.name && !uniqueShipNames.includes(crewShip.vessel.name)) {
-                    uniqueShipNames.push(crewShip.vessel.name);
-                }
-            });
-        });
-
-        return uniqueShipNames;
+        return await this.vesselRepository.findVesselsName(shipsName, channelId, crewId, position);
     };
 }

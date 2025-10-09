@@ -77,6 +77,8 @@ export default class AlarmService {
                 if (err instanceof Error) {
                     this.log.error("Error: " + err);
                 }
+            } finally {
+                this.client.$disconnect();
             }
         }
     };
