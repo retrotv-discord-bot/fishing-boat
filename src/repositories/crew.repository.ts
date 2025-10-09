@@ -89,10 +89,8 @@ export default class CrewRepository {
         const crew = await this.client.crews.findUnique({
             where: {
                 id: crewId,
-            },
-            include: {
                 vessels: {
-                    where: {
+                    some: {
                         vesselId: vesselId,
                     },
                 },
