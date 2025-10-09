@@ -268,6 +268,9 @@ export default class ShipService {
         }
 
         // 어선 탑승여부 확인
+        this.log.debug("===== 어선 탑승여부 확인 =====");
+        this.log.debug(`유저 ID: ${crewId}`);
+        this.log.debug(`어선 ID: ${vessel.id}`);
         if (await this.crewRepository.isExistsOnVessel(crewId, vessel.id)) {
             return interaction.reply({
                 content: "이미 해당 어선에 탑승하고 있습니다.",
