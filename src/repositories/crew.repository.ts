@@ -86,20 +86,22 @@ export default class CrewRepository {
     }
 
     public async isExistsOnVessel(crewId: string, vesselId: string): Promise<boolean> {
-        return (
-            (await this.client.crews.findUnique({
-                where: {
-                    id: crewId,
-                },
-                include: {
-                    vessels: {
-                        where: {
-                            vesselId: vesselId,
-                        },
+        const crew = await this.client.crews.findUnique({
+            where: {
+                id: crewId,
+            },
+            include: {
+                vessels: {
+                    where: {
+                        vesselId: vesselId,
                     },
                 },
-            })) !== null
-        );
+            },
+        });
+
+        this.log.debug(`crew id: ${crew?.id}`);
+
+        return crew !== null;
     }
 
     public async embarkCrew(crew: Crew, vesselId: string): Promise<Crew> {
