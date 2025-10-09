@@ -318,6 +318,8 @@ export default class ShipService {
                 await txCrewRepository.embarkCrew(newCrew, vessel.id);
             });
 
+            this.client.$disconnect();
+
             this.log.debug("===== 어선 승선 완료 =====");
         } catch (err) {
             if (err instanceof Error) {

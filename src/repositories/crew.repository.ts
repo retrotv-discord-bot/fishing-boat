@@ -103,34 +103,22 @@ export default class CrewRepository {
     public async embarkCrew(crew: Crew, vesselId: string): Promise<Crew> {
         const isExists = await this.isExists(crew.id);
 
-        this.log.debug(`승선 여부: ${isExists}`);
-
-        const txResult = await this.client.$transaction(async (tx) => {
-            this.log.debug("새로운 선원 추가 트랜잭션 시작");
-            let newCrew = crew;
-            if (!isExists) {
-                newCrew = await tx.crews.create({
-                    data: crew,
-                });
-            }
-            this.log.debug("선원 추가 완료");
-
-            this.log.debug("선원-어선 매핑 추가 트랜잭션 시작");
-            const newVesselCrew = await tx.vesselsCrews.create({
-                data: {
-                    vesselId: vesselId,
-                    crewId: crew.id,
-                    position: "선원",
-                },
+        let newCrew = crew;
+        if (!isExists) {
+            newCrew = await this.client.crews.create({
+                data: crew,
             });
-            this.log.debug("선원-어선 매핑 추가 완료");
+        }
 
-            return { newCrew, newVesselCrew };
+        await this.client.vesselsCrews.create({
+            data: {
+                vesselId: vesselId,
+                crewId: crew.id,
+                position: "선원",
+            },
         });
 
-        this.client.$disconnect();
-
-        return txResult.newCrew;
+        return newCrew;
     }
 
     public async isExists(crewId: string): Promise<boolean> {
