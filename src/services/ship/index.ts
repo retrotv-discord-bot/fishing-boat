@@ -436,9 +436,9 @@ export default class ShipService {
                         },
                     });
                     if (allCrews.length > 0) {
-                        await tx.crews.deleteMany({
+                        await tx.vesselsCrews.deleteMany({
                             where: {
-                                id: {
+                                crewId: {
                                     in: allCrews.map((crew) => crew.id),
                                 },
                             },
