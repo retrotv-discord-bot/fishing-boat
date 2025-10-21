@@ -6,6 +6,10 @@ import {
     ChatInputCommandInteraction,
 } from "discord.js";
 import Event from "../../../templates/event";
+import ShipService from "../../../services/ship";
+
+const shipService = new ShipService();
+const { embark } = shipService;
 
 export default new Event({
     name: Events.InteractionCreate,
@@ -40,6 +44,11 @@ export default new Event({
                         flags: MessageFlags.Ephemeral,
                     });
                 }
+            }
+        } else if (interaction.isButton()) {
+            const buttonCustomId = interaction.customId;
+            if (buttonCustomId === "embark") {
+                await embark(interaction);
             }
         }
     },

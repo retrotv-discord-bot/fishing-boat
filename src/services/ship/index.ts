@@ -4,7 +4,7 @@ import prisma from "../../config/datasource";
 import { validateDate } from "../../utils/time";
 
 import Logger from "../../config/logtape";
-import { MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js";
 
 import { digestSha3512 } from "../../utils/cryptography";
 import VesselRepository from "../../repositories/vessel.repository";
@@ -142,8 +142,13 @@ export default class ShipService {
                 text: "어선 생성 완료!",
             },
         };
+        const embarkButton = new ButtonBuilder()
+            .setCustomId("embark")
+            .setLabel("탑승하기")
+            .setStyle(ButtonStyle.Primary);
+        const row = new ActionRowBuilder().addComponents(embarkButton);
 
-        return interaction.reply({ embeds: [vesselEmbed] });
+        return interaction.reply({ embeds: [vesselEmbed], components: [row] });
     };
 
     // 침몰
