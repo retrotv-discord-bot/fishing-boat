@@ -143,7 +143,7 @@ export default class ShipService {
             },
         };
         const embarkButton = new ButtonBuilder()
-            .setCustomId("embark")
+            .setCustomId("embark_" + savedVessel.name)
             .setLabel("탑승하기")
             .setStyle(ButtonStyle.Primary);
         const row = new ActionRowBuilder().addComponents(embarkButton);
@@ -260,8 +260,20 @@ export default class ShipService {
         const crewId = interaction.user.id;
         const crewName = interaction.user.username;
         const crewGlobalName = interaction.user.globalName;
-        const vesselName = interaction.options.getString("선명");
         const channelId = interaction.channelId;
+        let vesselName;
+        try {
+            vesselName = interaction.options.getString("선명");
+        } catch (err) {
+            vesselName = interaction.customId.replace("embark_", "");
+        }
+
+        if (!vesselName) {
+            return interaction.reply({
+                content: "해당하는 어선명을 찾을 수 없습니다.",
+                flags: MessageFlags.Ephemeral,
+            });
+        }
 
         // 어선 조회
         const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);

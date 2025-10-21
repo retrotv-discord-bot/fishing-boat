@@ -47,7 +47,7 @@ export default new Event({
             }
         } else if (interaction.isButton()) {
             const buttonCustomId = interaction.customId;
-            if (buttonCustomId === "embark") {
+            if (buttonCustomId.startsWith("embark_")) {
                 await embark(interaction);
             }
         }
