@@ -80,7 +80,12 @@ export default class ShipService {
             });
         }
 
-        const captain = new CrewEntity(interaction.user.id, interaction.user.username, interaction.user.globalName);
+        /*
+         * 서버 이름을 기본적으로 가져오고, 해당 값이 없으면 전역 프로필 이름 -> 기본 이름 순으로 가져온다
+         * (interaction.user.username은 계정이 생성될 때 부여되는 unique한 값이다)
+         */
+        const username = interaction.user?.displayName ?? interaction.user?.globalName ?? interaction.user.username;
+        const captain = new CrewEntity(interaction.user.id, interaction.user.username, username);
 
         let alarm: AlarmEntity | null = null;
         if (alarmTime !== null) {

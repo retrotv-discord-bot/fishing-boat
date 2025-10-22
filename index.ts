@@ -98,6 +98,7 @@ events.forEach((event) => {
 
 const alarmService = new AlarmService();
 
+// 1분 마다 알람을 보내는 스케쥴러
 schedule.scheduleJob("* * * * *", () => {
     alarmService.sendAlarm(client);
 });
