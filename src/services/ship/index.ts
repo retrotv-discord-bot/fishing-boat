@@ -4,7 +4,7 @@ import prisma from "../../config/datasource";
 import { validateDate } from "../../utils/time";
 
 import Logger from "../../config/logtape";
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ContextMenuCommandInteraction, EmbedBuilder, InteractionResponse, JSONEncodable, MessageComponentInteraction, MessageFlags, RepliableInteraction, TextBasedChannel, TextChannel } from "discord.js";
 
 import { digestSha3512 } from "../../utils/cryptography";
 import VesselRepository from "../../repositories/vessel.repository";
@@ -16,6 +16,8 @@ import Vessel from "../../entities/vessel";
 import VesselEntity from "../../entities/vessel.entity";
 import VesselCrewRepository from "../../repositories/vesselCrew.repository";
 import VesselCrewEntity from "../../entities/vesselCrew.entity";
+import { privateReply } from "../../utils/reply";
+import Crew from "../../entities/crew";
 
 export default class ShipService {
     private readonly client: PrismaClient;
@@ -32,20 +34,17 @@ export default class ShipService {
     }
 
     // 건조
-    public createShip = async (interaction: any): Promise<void> => {
+    public createShip = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
         const channelId = interaction.channelId;
         let alarmTime = interaction.options.getString("출항시간");
-        let canMidParticipation = interaction.options.getBoolean("중참가능여부");
+        let canMidParticipation: boolean | string | null = interaction.options.getBoolean("중참가능여부");
 
         if (alarmTime !== null) {
             // 출항 시간에 대한 유효성 검증
             const [valid, message] = validateDate(alarmTime);
 
             if (!valid) {
-                return interaction.reply({
-                    content: message,
-                    flags: MessageFlags.Ephemeral,
-                });
+                return privateReply(interaction, message!!);
             }
 
             alarmTime = alarmTime?.replaceAll(" ", "");
@@ -60,24 +59,22 @@ export default class ShipService {
 
         canMidParticipation = cmp ? "Y" : "N";
 
+        // vesselName, vesselCapacity는 필수 값이므로 non-null 단언 연산자(!!) 사용
         const vesselName = interaction.options.getString("선명");
         const vesselCapacity = interaction.options.getInteger("인원수");
         const vesselDescription = interaction.options.getString("설명") ?? "설명이 없습니다.";
         const newVessel: Vessel = new VesselEntity(
             digestSha3512(vesselName + channelId),
-            vesselName,
+            vesselName!!,
             channelId,
-            vesselCapacity,
+            vesselCapacity!!,
             vesselDescription,
             canMidParticipation,
         );
 
         // 동일한 채널에 같은 이름의 어선이 존재하는지 확인
         if (await this.vesselRepository.isExists(newVessel.name, channelId)) {
-            return interaction.reply({
-                content: "이미 존재하는 어선입니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction, "이미 존재하는 어선입니다.");
         }
 
         /*
@@ -118,21 +115,15 @@ export default class ShipService {
                 this.log.error("Error: " + err.message);
             }
 
-            return interaction.reply({
-                content: "어선 생성에 실패했습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction, "어선 생성에 실패했습니다.");
         }
 
-        const vesselEmbed = {
-            color: 0x0099ff,
-            title: savedVessel.name,
-            description: savedVessel.description,
-            fields: [
-                {
-                    name: "인원수",
-                    value: `총 ${savedVessel.capacity}명`,
-                },
+        const vesselEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setTitle(savedVessel.name)
+            .setDescription(savedVessel.description)
+            .addFields(
+                { name: "인원수", value: `총 ${savedVessel.capacity}명` },
                 {
                     name: "출항시간",
                     value: alarmTime ? `${alarmTime.substring(0, 2)}:${alarmTime.substring(2, 4)}` : "설정되지 않음",
@@ -141,35 +132,32 @@ export default class ShipService {
                     name: "중도참여 가능여부",
                     value: savedVessel.canMidParticipation === "Y" ? "가능" : "불가능",
                 },
-            ],
-            timestamp: new Date(),
-            footer: {
-                text: "어선 생성 완료!",
-            },
-        };
+            )
+            .setTimestamp(new Date())
+            .setFooter({ text: "어선 생성 완료!" });
         const embarkButton = new ButtonBuilder()
             .setCustomId("embark_" + savedVessel.name)
             .setLabel("탑승하기")
             .setStyle(ButtonStyle.Primary);
-        const row = new ActionRowBuilder().addComponents(embarkButton);
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(embarkButton);
 
         return interaction.reply({ embeds: [vesselEmbed], components: [row] });
     };
 
     // 침몰
-    public sinking = async (interaction: any): Promise<void> => {
+    public sinking = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
         const clientId = interaction.user.id;
-        const vesselName = interaction.options.getString("선명");
+        const vesselName = interaction.options.getString("선명")!!;
         const channelId = interaction.channelId;
 
         // 어선 조회
         const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);
         if (vessel === null) {
-            return interaction.reply({ content: "해당 어선이 존재하지 않습니다.", flags: MessageFlags.Ephemeral });
+            return privateReply(interaction, "해당 어선이 존재하지 않습니다.");
         }
 
         if (!(await this.crewRepository.isCaptain(clientId, vessel.id))) {
-            return interaction.reply({ content: "어선의 선장만 침몰시킬 수 있습니다.", flags: MessageFlags.Ephemeral });
+            return privateReply(interaction, "어선의 선장만 침몰시킬 수 있습니다.");
         }
 
         // 어선 삭제
@@ -185,48 +173,43 @@ export default class ShipService {
                 this.log.error("Error: " + err.message);
             }
 
-            return interaction.reply({ content: "어선이 침몰하지 않았습니다.", flags: MessageFlags.Ephemeral });
+            privateReply(interaction, "어선이 침몰하지 않았습니다.");
         }
 
-        const vesselEmbed = {
-            color: 0x0099ff,
-            title: vesselName,
-            description: "어선이 침몰되었습니다!",
-            timestamp: new Date(),
-            footer: {
-                text: "꼬르륵!",
-            },
-        };
+        const vesselEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setTitle(vesselName)
+            .setDescription("어선이 침몰되었습니다!")
+            .setTimestamp(new Date())
+            .setFooter({ text: "꼬르륵!" });
 
         return interaction.reply({ embeds: [vesselEmbed] });
     };
 
     // 목록
-    public searchShips = async (interaction: any): Promise<void> => {
+    public searchShips = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
         const channelId = interaction.channelId;
         const vessels = await this.vesselRepository.findByChannelId(channelId);
         if (vessels.length === 0) {
-            return interaction.reply({ content: "어선이 존재하지 않습니다.", flags: MessageFlags.Ephemeral });
+            return privateReply(interaction, "어선이 존재하지 않습니다.");
         }
 
-        const shipEmbeds = vessels.map((vessel) => ({
-            color: 0x0099ff,
-            title: vessel.name,
-            description: vessel.description,
-            fields: [
-                {
-                    name: "인원수",
-                    value: `총 ${vessel.capacity}명`,
-                },
-            ],
-        }));
+        const shipEmbeds = vessels.map((vessel) => (
+            new EmbedBuilder()
+                .setColor(0x0099ff)
+                .setTitle(vessel.name)
+                .setDescription(vessel.description)
+                .addFields(
+                    { name: "인원수", value: `총 ${vessel.capacity}명` },
+                )
+        ));
 
-        return interaction.reply({ embeds: shipEmbeds, flags: MessageFlags.Ephemeral });
+        return privateReply(interaction, shipEmbeds);
     };
 
     // 선원목록
-    public searchCrewsInShip = async (interaction: any): Promise<void> => {
-        const vesselName = interaction.options.getString("선명");
+    public searchCrewsInShip = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
+        const vesselName = interaction.options.getString("선명")!!;
         const channelId = interaction.channelId;
 
         // 어선 조회
@@ -245,65 +228,52 @@ export default class ShipService {
         const crewsName = crews.map((crew) => crew.globalName);
         const crewMentions = crewsName.map((crewName) => `${crewName}`).join("\n");
 
-        const crewsEmbed = {
-            color: 0x0099ff,
-            title: vesselName,
-            description: "선원목록",
-            fields: [
+        const crewsEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setTitle(vesselName)
+            .setDescription("선원목록")
+            .addFields(
                 {
                     name: "탑승인원",
                     value: crewMentions,
                 },
-            ],
-        };
+            );
 
-        return interaction.reply({ embeds: [crewsEmbed], flags: MessageFlags.Ephemeral });
+        return privateReply(interaction, [crewsEmbed]);
     };
 
     // 승선
-    public embark = async (interaction: any): Promise<void> => {
+    public embark = async (interaction: ChatInputCommandInteraction | MessageComponentInteraction): Promise<InteractionResponse<boolean>> => {
         const crewId = interaction.user.id;
         const crewName = interaction.user.username;
         const crewGlobalName = interaction.user.globalName;
         const channelId = interaction.channelId;
         let vesselName;
-        try {
+        if (interaction.isChatInputCommand()) {
             vesselName = interaction.options.getString("선명");
-        } catch (err) {
+        } else if (interaction.isMessageComponent()) {
             vesselName = interaction.customId.replace("embark_", "");
         }
 
         if (!vesselName) {
-            return interaction.reply({
-                content: "해당하는 어선명을 찾을 수 없습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction as RepliableInteraction, "해당하는 어선명을 찾을 수 없습니다.");
         }
 
         // 어선 조회
         const vessel = await this.vesselRepository.findByNameAndChannelId(vesselName, channelId);
         if (vessel === null) {
-            return interaction.reply({
-                content: "해당 어선이 존재하지 않습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction as RepliableInteraction, "해당 어선이 존재하지 않습니다.");
         }
 
         // 어선 탑승여부 확인
         const isExists = await this.crewRepository.isExistsOnVessel(crewId, vessel.id);
         if (isExists) {
-            return interaction.reply({
-                content: "이미 해당 어선에 탑승하고 있습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction as RepliableInteraction, "이미 해당 어선에 탑승하고 있습니다.");
         }
 
         const crews = await this.crewRepository.findCrewsOnVesselByVesselId(vessel.id);
         if (crews.length >= vessel.capacity) {
-            return interaction.reply({
-                content: "어선의 정원이 초과되었습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction as RepliableInteraction, "어선의 정원이 초과되었습니다.");
         }
 
         if (vessel.canMidParticipation === "N") {
@@ -313,10 +283,7 @@ export default class ShipService {
                 const nowHHMM = now.getHours() * 100 + now.getMinutes();
 
                 if (nowHHMM >= Number.parseInt(alarmTime.alarmTime)) {
-                    return interaction.reply({
-                        content: "어선의 출항시간이 지나서 승선할 수 없습니다!",
-                        flags: MessageFlags.Ephemeral,
-                    });
+                    return privateReply(interaction as RepliableInteraction, "어선의 출항시간이 지나서 승선할 수 없습니다!");
                 }
             }
         }
@@ -329,10 +296,10 @@ export default class ShipService {
             this.log.debug(`어선 ID: ${vessel.id}`);
             this.log.debug("유저 역할: 선원");
 
-            const newCrew = {
+            const newCrew: Crew = {
                 id: crewId,
                 name: crewName,
-                globalName: crewGlobalName,
+                globalName: crewGlobalName!!,
             };
 
             await this.client.$transaction(async (tx) => {
@@ -354,23 +321,20 @@ export default class ShipService {
             this.client.$disconnect();
         }
 
-        const shipEmbed = {
-            color: 0x0099ff,
-            title: vesselName,
-            description: "승선 완료!",
-            timestamp: new Date(),
-            footer: {
-                text: "어선 승선 완료!",
-            },
-        };
+        const shipEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setTitle(vesselName)
+            .setDescription("승선 완료!")
+            .setTimestamp(new Date())
+            .setFooter({ text: "어선 승선 완료!" });
 
         return interaction.reply({ embeds: [shipEmbed] });
     };
 
     // 하선
-    public disembark = async (interaction: any): Promise<void> => {
+    public disembark = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
         const crewId = interaction.user.id;
-        const shipName = interaction.options.getString("선명");
+        const shipName = interaction.options.getString("선명")!!;
         const channelId = interaction.channelId;
 
         const crew = await this.client.crews.findUnique({
@@ -391,10 +355,7 @@ export default class ShipService {
         });
 
         if (crew === null) {
-            return interaction.reply({
-                content: "해당 어선에 탑승하고 있지 않습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction, "해당 어선에 탑승하고 있지 않습니다.");
         }
 
         let isCaptain = false;
@@ -403,10 +364,7 @@ export default class ShipService {
                 const vessel = await this.vesselRepository.findByNameAndChannelId(shipName, channelId);
 
                 if (vessel === null) {
-                    return interaction.reply({
-                        content: "해당 어선이 존재하지 않습니다.",
-                        flags: MessageFlags.Ephemeral,
-                    });
+                    return privateReply(interaction, "해당 어선이 존재하지 않습니다.");
                 }
 
                 // 어선 하선
@@ -503,58 +461,54 @@ export default class ShipService {
             await this.client.$disconnect();
         }
 
-        const shipEmbed = {
-            color: 0x0099ff,
-            title: shipName,
-            description: "하선 완료!",
-            timestamp: new Date(),
-            footer: {
-                text: "어선 하선 완료!",
-            },
-        };
+        const shipEmbed = new EmbedBuilder()
+            .setColor(0x0099ff)
+            .setTitle(shipName)
+            .setDescription("하선 완료!")
+            .setTimestamp(new Date())
+            .setFooter({ text: "어선 하선 완료!" });
 
         // 선장이 하선한 경우, 어선이 침몰되었다고 추가로 알림
         if (isCaptain) {
-            const shipEmbed = {
-                color: 0x0099ff,
-                title: shipName,
-                description: "어선이 침몰되었습니다!",
-                timestamp: new Date(),
-                footer: {
-                    text: "꼬르륵!",
-                },
-            };
+            const shipEmbed = new EmbedBuilder()
+                .setColor(0x0099ff)
+                .setTitle(shipName)
+                .setDescription("어선이 침몰되었습니다!")
+                .setTimestamp(new Date())
+                .setFooter({ text: "꼬르륵!" });
+            
+            if (!interaction.channel || !interaction.channel.isTextBased() || !('send' in interaction.channel)) {
+                return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
+            }
 
-            interaction.channel.send({ embeds: [shipEmbed] });
+            await interaction.channel.send({ embeds: [shipEmbed] });
         }
 
         return interaction.reply({ embeds: [shipEmbed], flags: MessageFlags.Ephemeral });
     };
 
     // 호출
-    public callingSailor = async (interaction: any): Promise<void> => {
+    public callingSailor = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
         const channel = interaction.channel;
         const channelId = interaction.channelId;
-        const shipName = interaction.options.getString("선명");
+        const shipName = interaction.options.getString("선명")!!;
 
         // 어선에 탑승한 선원들 조회
         const crews = await this.crewRepository.findCrewsOnVessel(shipName, channelId);
         if (crews.length === 0) {
-            return interaction.reply({
-                content: "해당 어선에 탑승한 선원이 없습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction, "해당 어선에 탑승한 선원이 없습니다.");
         }
 
         const crewIds = crews.map((crew) => crew.id);
         let userMentions = crewIds.map((userId) => `<@${userId}>`).join(", ");
         userMentions = userMentions + ` 선원들! 지금 당장 ${shipName} 어선에 탑승하시오!`;
 
-        channel.send(userMentions);
-        return interaction.reply({
-            content: "어선에 탑승한 인원들에게 알림을 보냈습니다.",
-            flags: MessageFlags.Ephemeral,
-        });
+        if (!channel || !channel.isTextBased() || !('send' in channel)) {
+            return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
+        }
+        await channel.send(userMentions);
+        
+        return privateReply(interaction, "어선에 탑승한 인원들에게 알림을 보냈습니다.");
     };
 
     // 어선명 자동완성
