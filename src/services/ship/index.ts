@@ -246,7 +246,7 @@ export default class ShipService {
     public embark = async (interaction: ChatInputCommandInteraction | MessageComponentInteraction): Promise<InteractionResponse<boolean>> => {
         const crewId = interaction.user.id;
         const crewName = interaction.user.username;
-        const crewGlobalName = interaction.user.globalName;
+        const crewGlobalName = interaction.user?.displayName ?? interaction.user?.globalName ?? crewName;
         const channelId = interaction.channelId;
         let vesselName;
         if (interaction.isChatInputCommand()) {
@@ -313,10 +313,7 @@ export default class ShipService {
                 this.log.error("Error: " + err.message);
             }
 
-            return interaction.reply({
-                content: "어선 승선에 실패했습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+            return privateReply(interaction as RepliableInteraction, "어선 승선에 실패했습니다.");
         } finally {
             this.client.$disconnect();
         }
@@ -324,6 +321,9 @@ export default class ShipService {
         const shipEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(vesselName)
+            .setFields(
+                { name: "승선한 선원", value: `<@${crewGlobalName}>` },
+            )
             .setDescription("승선 완료!")
             .setTimestamp(new Date())
             .setFooter({ text: "어선 승선 완료!" });
