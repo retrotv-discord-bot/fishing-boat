@@ -4,7 +4,17 @@ import prisma from "../../config/datasource";
 import { validateDate } from "../../utils/time";
 
 import Logger from "../../config/logtape";
-import { ActionRowBuilder, ButtonBuilder, ButtonInteraction, ButtonStyle, ChatInputCommandInteraction, ContextMenuCommandInteraction, EmbedBuilder, InteractionResponse, JSONEncodable, MessageComponentInteraction, MessageFlags, RepliableInteraction, TextBasedChannel, TextChannel } from "discord.js";
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChatInputCommandInteraction,
+    EmbedBuilder,
+    InteractionResponse,
+    MessageComponentInteraction,
+    MessageFlags,
+    RepliableInteraction,
+} from "discord.js";
 
 import { digestSha3512 } from "../../utils/cryptography";
 import VesselRepository from "../../repositories/vessel.repository";
@@ -60,14 +70,14 @@ export default class ShipService {
         canMidParticipation = cmp ? "Y" : "N";
 
         // vesselName, vesselCapacity는 필수 값이므로 non-null 단언 연산자(!!) 사용
-        const vesselName = interaction.options.getString("선명");
-        const vesselCapacity = interaction.options.getInteger("인원수");
+        const vesselName = interaction.options.getString("선명")!!;
+        const vesselCapacity = interaction.options.getInteger("인원수")!!;
         const vesselDescription = interaction.options.getString("설명") ?? "설명이 없습니다.";
         const newVessel: Vessel = new VesselEntity(
             digestSha3512(vesselName + channelId),
-            vesselName!!,
+            vesselName,
             channelId,
-            vesselCapacity!!,
+            vesselCapacity,
             vesselDescription,
             canMidParticipation,
         );
@@ -99,6 +109,10 @@ export default class ShipService {
 
                 const v = await txVesselRepository.save(newVessel);
                 await txCrewRepository.save(captain);
+
+                if (v === null) {
+                    throw new Error("어선 생성에 실패했습니다.");
+                }
 
                 // 3. VesselCrew 관계 저장 (선장으로 등록)
                 await txVesselCrewRepository.save(new VesselCrewEntity(v.id, captain.id, "선장"));
@@ -194,21 +208,21 @@ export default class ShipService {
             return privateReply(interaction, "어선이 존재하지 않습니다.");
         }
 
-        const shipEmbeds = vessels.map((vessel) => (
+        const shipEmbeds = vessels.map((vessel) =>
             new EmbedBuilder()
                 .setColor(0x0099ff)
                 .setTitle(vessel.name)
                 .setDescription(vessel.description)
-                .addFields(
-                    { name: "인원수", value: `총 ${vessel.capacity}명` },
-                )
-        ));
+                .addFields({ name: "인원수", value: `총 ${vessel.capacity}명` }),
+        );
 
         return privateReply(interaction, shipEmbeds);
     };
 
     // 선원목록
-    public searchCrewsInShip = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
+    public searchCrewsInShip = async (
+        interaction: ChatInputCommandInteraction,
+    ): Promise<InteractionResponse<boolean>> => {
         const vesselName = interaction.options.getString("선명")!!;
         const channelId = interaction.channelId;
 
@@ -232,18 +246,18 @@ export default class ShipService {
             .setColor(0x0099ff)
             .setTitle(vesselName)
             .setDescription("선원목록")
-            .addFields(
-                {
-                    name: "탑승인원",
-                    value: crewMentions,
-                },
-            );
+            .addFields({
+                name: "탑승인원",
+                value: crewMentions,
+            });
 
         return privateReply(interaction, [crewsEmbed]);
     };
 
     // 승선
-    public embark = async (interaction: ChatInputCommandInteraction | MessageComponentInteraction): Promise<InteractionResponse<boolean>> => {
+    public embark = async (
+        interaction: ChatInputCommandInteraction | MessageComponentInteraction,
+    ): Promise<InteractionResponse<boolean>> => {
         const crewId = interaction.user.id;
         const crewName = interaction.user.username;
         const crewGlobalName = interaction.user?.displayName ?? interaction.user?.globalName ?? crewName;
@@ -283,7 +297,10 @@ export default class ShipService {
                 const nowHHMM = now.getHours() * 100 + now.getMinutes();
 
                 if (nowHHMM >= Number.parseInt(alarmTime.alarmTime)) {
-                    return privateReply(interaction as RepliableInteraction, "어선의 출항시간이 지나서 승선할 수 없습니다!");
+                    return privateReply(
+                        interaction as RepliableInteraction,
+                        "어선의 출항시간이 지나서 승선할 수 없습니다!",
+                    );
                 }
             }
         }
@@ -321,9 +338,7 @@ export default class ShipService {
         const shipEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(vesselName)
-            .setFields(
-                { name: "승선한 선원", value: `<@${crewGlobalName}>` },
-            )
+            .setFields({ name: "승선한 선원", value: `<@${crewGlobalName}>` })
             .setDescription("승선 완료!")
             .setTimestamp(new Date())
             .setFooter({ text: "어선 승선 완료!" });
@@ -337,23 +352,7 @@ export default class ShipService {
         const shipName = interaction.options.getString("선명")!!;
         const channelId = interaction.channelId;
 
-        const crew = await this.client.crews.findUnique({
-            where: {
-                id: crewId,
-                vessels: {
-                    some: {
-                        vessel: {
-                            name: shipName,
-                            channelId: channelId,
-                        },
-                    },
-                },
-            },
-            include: {
-                vessels: true,
-            },
-        });
-
+        const crew = await this.crewRepository.findCrewOnVesselById(shipName, channelId, crewId);
         if (crew === null) {
             return privateReply(interaction, "해당 어선에 탑승하고 있지 않습니다.");
         }
@@ -361,64 +360,40 @@ export default class ShipService {
         let isCaptain = false;
         try {
             await this.client.$transaction(async (tx) => {
-                const vessel = await this.vesselRepository.findByNameAndChannelId(shipName, channelId);
+                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+                const txCrewRepository = new CrewRepository(tx as PrismaClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
+
+                const vessel = await txVesselRepository.findByNameAndChannelId(shipName, channelId);
 
                 if (vessel === null) {
                     return privateReply(interaction, "해당 어선이 존재하지 않습니다.");
                 }
 
                 // 어선 하선
-                await tx.vesselsCrews.delete({
-                    where: {
-                        vesselId_crewId: {
-                            vesselId: vessel.id,
-                            crewId: crew.id,
-                        },
-                    },
-                });
+                await txVesselCrewRepository.delete(crew.id, vessel.id);
+
+                this.log.debug(`crew.id: ${crew.id}`);
+                this.log.debug(`crew.vessels[0] crewId: ${crew.vessels[0].crewId}`);
+                this.log.debug(`crew.vessels[0] vesselId: ${crew.vessels[0].vesselId}`);
+                this.log.debug(`crew.vessels[0] position: ${crew.vessels[0].position}`);
 
                 if (crew.vessels[0].position === "선장") {
-                    this.log.info("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
+                    this.log.debug("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
 
                     isCaptain = true;
 
                     // 모든 선원 삭제
-                    const allCrews = await tx.crews.findMany({
-                        where: {
-                            vessels: {
-                                some: {
-                                    vessel: {
-                                        name: shipName,
-                                        channelId: channelId,
-                                    },
-                                },
-                            },
-                        },
-                        include: {
-                            vessels: true,
-                        },
-                    });
+                    const allCrews = await txCrewRepository.findMany(shipName, channelId);
                     if (allCrews.length > 0) {
-                        await tx.vesselsCrews.deleteMany({
-                            where: {
-                                crewId: {
-                                    in: allCrews.map((crew) => crew.id),
-                                },
-                            },
-                        });
+                        await txVesselCrewRepository.deleteMany(allCrews);
                     }
 
                     this.log.debug("모든 유저를 삭제했습니다.");
 
                     // 알람 삭제
-                    const allAlarms = await tx.alarms.findMany({
-                        where: {
-                            vessel: {
-                                name: shipName,
-                                channelId: channelId,
-                            },
-                        },
-                    });
+                    const allAlarms = await txAlarmRepository.findMany(shipName, channelId);
                     if (allAlarms) {
                         const deleteConditions = allAlarms.map((alarm) => ({
                             vesselId: alarm.vesselId,
@@ -426,25 +401,13 @@ export default class ShipService {
                         }));
 
                         // deleteMany를 사용하여 삭제
-                        await tx.alarms.deleteMany({
-                            where: {
-                                OR: deleteConditions.map((condition) => ({
-                                    vesselId: condition.vesselId,
-                                    alarmTime: condition.alarmTime,
-                                })),
-                            },
-                        });
+                        await txAlarmRepository.deleteMany(deleteConditions);
                     }
 
                     this.log.debug("모든 알람을 삭제했습니다.");
 
                     // 어선 삭제
-                    await tx.vessels.deleteMany({
-                        where: {
-                            name: shipName,
-                            channelId: channelId,
-                        },
-                    });
+                    await txVesselRepository.deleteMany(shipName, channelId);
 
                     this.log.debug("어선을 삭제했습니다.");
                 }
@@ -453,10 +416,8 @@ export default class ShipService {
             if (err instanceof Error) {
                 this.log.error("Error: " + err.message);
             }
-            return interaction.reply({
-                content: "어선 하선에 실패했습니다.",
-                flags: MessageFlags.Ephemeral,
-            });
+
+            return privateReply(interaction, "어선 하선에 실패했습니다.");
         } finally {
             await this.client.$disconnect();
         }
@@ -476,8 +437,8 @@ export default class ShipService {
                 .setDescription("어선이 침몰되었습니다!")
                 .setTimestamp(new Date())
                 .setFooter({ text: "꼬르륵!" });
-            
-            if (!interaction.channel || !interaction.channel.isTextBased() || !('send' in interaction.channel)) {
+
+            if (!interaction.channel || !interaction.channel.isTextBased() || !("send" in interaction.channel)) {
                 return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
             }
 
@@ -503,11 +464,11 @@ export default class ShipService {
         let userMentions = crewIds.map((userId) => `<@${userId}>`).join(", ");
         userMentions = userMentions + ` 선원들! 지금 당장 ${shipName} 어선에 탑승하시오!`;
 
-        if (!channel || !channel.isTextBased() || !('send' in channel)) {
+        if (!channel || !channel.isTextBased() || !("send" in channel)) {
             return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
         }
         await channel.send(userMentions);
-        
+
         return privateReply(interaction, "어선에 탑승한 인원들에게 알림을 보냈습니다.");
     };
 

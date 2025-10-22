@@ -10,7 +10,7 @@ export default class VesselRepository {
         this.client = client;
     }
 
-    public async save(vessel: Vessel): Promise<Vessel> {
+    public async save(vessel: Vessel): Promise<Vessel | null> {
         let savedVessel: Vessel | null = await this.client.vessels.findUnique({
             where: {
                 id: vessel.id,
@@ -62,6 +62,15 @@ export default class VesselRepository {
         await this.client.vessels.delete({
             where: {
                 id: vesselId,
+            },
+        });
+    }
+
+    public async deleteMany(vesselName: string, channelId: string): Promise<void> {
+        await this.client.vessels.deleteMany({
+            where: {
+                name: vesselName,
+                channelId: channelId,
             },
         });
     }

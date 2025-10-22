@@ -10,7 +10,7 @@ export default class AlarmRepository {
         this.client = client;
     }
 
-    public async save(alarm: Alarm): Promise<Alarm> {
+    public async save(alarm: Alarm): Promise<Alarm | null> {
         let savedAlarm: Alarm | null = await this.client.alarms.findUnique({
             where: {
                 vesselId_alarmTime: {
@@ -41,6 +41,17 @@ export default class AlarmRepository {
         return savedAlarm;
     }
 
+    public async findMany(vesselName: string, channelId: string): Promise<Alarm[]> {
+        return await this.client.alarms.findMany({
+            where: {
+                vessel: {
+                    name: vesselName,
+                    channelId: channelId,
+                },
+            },
+        });
+    }
+
     public async findByVesselId(vesselId: string): Promise<Alarm | null> {
         return await this.client.alarms.findUnique({
             where: {
@@ -63,6 +74,17 @@ export default class AlarmRepository {
                     lte: currentTime,
                 },
                 use: "Y",
+            },
+        });
+    }
+
+    public async deleteMany(deleteConditions: { vesselId: string; alarmTime: string }[]): Promise<void> {
+        await this.client.alarms.deleteMany({
+            where: {
+                OR: deleteConditions.map((condition) => ({
+                    vesselId: condition.vesselId,
+                    alarmTime: condition.alarmTime,
+                })),
             },
         });
     }

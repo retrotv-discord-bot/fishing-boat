@@ -1,8 +1,14 @@
 import { EmbedBuilder, MessageFlags, RepliableInteraction } from "discord.js";
 
 // overload signatures
-export function privateReply(interaction: RepliableInteraction, message: string): ReturnType<RepliableInteraction["reply"]>;
-export function privateReply(interaction: RepliableInteraction, embeds: EmbedBuilder[]): ReturnType<RepliableInteraction["reply"]>;
+export function privateReply(
+    interaction: RepliableInteraction,
+    message: string,
+): ReturnType<RepliableInteraction["reply"]>;
+export function privateReply(
+    interaction: RepliableInteraction,
+    embeds: EmbedBuilder[],
+): ReturnType<RepliableInteraction["reply"]>;
 
 // single implementation
 export function privateReply(interaction: RepliableInteraction, payload: string | EmbedBuilder[]) {
@@ -16,12 +22,5 @@ export function privateReply(interaction: RepliableInteraction, payload: string 
     return interaction.reply({
         embeds: payload,
         flags: MessageFlags.Ephemeral,
-    });
-}
-
-export function publicReply(interaction: RepliableInteraction, embeds: EmbedBuilder[]) {
-    return interaction.reply({
-        embeds: embeds,
-        flags: MessageFlags.Ephemeral
     });
 }

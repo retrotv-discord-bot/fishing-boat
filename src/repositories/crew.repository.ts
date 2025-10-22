@@ -1,6 +1,5 @@
 import { PrismaClient } from "@prisma/client";
 import Crew from "../entities/crew";
-import CrewEntity from "../entities/crew.entity";
 import Logger from "../config/logtape";
 
 export default class CrewRepository {
@@ -11,8 +10,8 @@ export default class CrewRepository {
         this.client = client;
     }
 
-    public async save(crew: Crew): Promise<CrewEntity> {
-        let savedCrew: CrewEntity | null = await this.client.crews.findUnique({
+    public async save(crew: Crew): Promise<Crew | null> {
+        let savedCrew: Crew | null = await this.client.crews.findUnique({
             where: {
                 id: crew.id,
             },
@@ -34,6 +33,36 @@ export default class CrewRepository {
         return await this.client.crews.findUnique({
             where: {
                 id: crewId,
+            },
+        });
+    }
+
+    public async findCrewOnVesselById(
+        vesselName: string,
+        channelId: string,
+        crewId: string,
+    ): Promise<
+        | ({ vessels: { vesselId: string; crewId: string; position: string }[] } & {
+              id: string;
+              name: string;
+              globalName: string;
+          })
+        | null
+    > {
+        return await this.client.crews.findUnique({
+            where: {
+                id: crewId,
+                vessels: {
+                    some: {
+                        vessel: {
+                            name: vesselName,
+                            channelId: channelId,
+                        },
+                    },
+                },
+            },
+            include: {
+                vessels: true,
             },
         });
     }
@@ -103,7 +132,7 @@ export default class CrewRepository {
         return crew !== null;
     }
 
-    public async embarkCrew(crew: Crew, vesselId: string): Promise<Crew> {
+    public async embarkCrew(crew: Crew, vesselId: string): Promise<Crew | null> {
         const isExists = await this.isExists(crew.id);
 
         let newCrew = crew;
@@ -132,5 +161,23 @@ export default class CrewRepository {
                 },
             })) !== null
         );
+    }
+
+    public async findMany(vesselName: string, channelId: string): Promise<Crew[]> {
+        return await this.client.crews.findMany({
+            where: {
+                vessels: {
+                    some: {
+                        vessel: {
+                            name: vesselName,
+                            channelId: channelId,
+                        },
+                    },
+                },
+            },
+            include: {
+                vessels: true,
+            },
+        });
     }
 }
