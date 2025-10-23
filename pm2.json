@@ -2,16 +2,19 @@
   "apps": [
     {
       "name": "Fishing Vessel",
-      "script": "index.ts",
-      "interpreter": "./node_modules/.bin/ts-node",
-      "instances": "1",
-      "watch": [ "src", "index.ts" ],
+      "script": "dist/index.js",
+      "cwd": ".",
+      "instances": 1,
+      "watch": [ "dist" ],
       "auto_restart": true,
       "ignore_watch": [ "node_modules", "prisma" ],
       "env": {
-        "NODE_ENV": "prod",
+        "NODE_ENV": "production",
         "PRISMA_LOG": "info,warn,error"
-      }
+      },
+      "error_file": "./logs/pm2/error.log", 
+      "out_file": "./logs/pm2/output.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss"
     }
   ]
 }

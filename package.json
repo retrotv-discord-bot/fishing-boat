@@ -7,32 +7,35 @@
   "type": "commonjs",
   "main": "index.ts",
   "scripts": {
-    "install": "npx prisma generate && npx prisma migrate dev",
-    "start": "npx pm2 start pm2.json --watch",
+    "install": "npx prisma generate",
+    "build": "tsc -p tsconfig.json",
+    "start": "npm run build && npx pm2 start pm2.json --watch",
     "stop": "npx pm2 stop pm2.json",
     "delete": "npx pm2 delete pm2.json",
     "logs": "npx pm2 logs",
     "status": "npx pm2 status",
     "deploy": "ts-node src/discord/commands/deploy-commands-manual.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pm2:setup-logs": "bash ./pm2-logrotate.sh"
   },
   "dependencies": {
-    "@logtape/logtape": "^1.0.1",
+    "@logtape/logtape": "^1.1.2",
+    "@prisma/client": "^6.18.0",
     "@types/node-schedule": "^2.1.8",
-    "discord.js": "^14.21.0",
-    "dotenv": "^17.0.1",
+    "discord.js": "^14.23.2",
+    "dotenv": "^17.2.3",
     "node-schedule": "^2.1.1",
-    "pm2": "^6.0.5",
-    "ts-node": "^10.9.2"
+    "pm2": "^6.0.13"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.31.0",
-    "@typescript-eslint/parser": "^8.31.0",
-    "eslint": "^9.25.1",
-    "eslint-config-prettier": "^10.1.2",
+    "@typescript-eslint/eslint-plugin": "^8.46.2",
+    "@typescript-eslint/parser": "^8.46.2",
+    "eslint": "^9.38.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.2.6",
-    "prettier": "^3.5.3",
-    "prisma": "^6.18.0"
+    "eslint-plugin-prettier": "^5.5.4",
+    "prettier": "^3.6.2",
+    "prisma": "^6.18.0",
+    "ts-node": "^10.9.2"
   }
 }

@@ -41,3 +41,6 @@ prisma/fishing-vessel.db
 
 # Database
 *.sqlite
+
+# build
+dist/
