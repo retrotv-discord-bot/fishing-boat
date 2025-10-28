@@ -338,13 +338,19 @@ export default class ShipService {
         const shipEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(vesselName)
-            .setFields({ name: "승선한 선원", value: `<@${crewGlobalName}>` })
+            .setFields({ name: "승선한 선원", value: `${crewGlobalName}` })
             .setDescription("승선 완료!")
             .setTimestamp(new Date())
             .setFooter({ text: "어선 승선 완료!" });
 
-        return interaction.reply({ embeds: [shipEmbed] });
-    };
+        const embarkButton = new ButtonBuilder()
+            .setCustomId("embark_" + vesselName)
+            .setLabel("탑승하기")
+            .setStyle(ButtonStyle.Primary);
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(embarkButton);
+
+        return interaction.reply({ embeds: [shipEmbed], components: [row] });
+    }
 
     // 하선
     public disembark = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
