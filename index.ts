@@ -10,6 +10,7 @@ import { events } from "./src/discord/events";
 import { config } from "./config";
 
 import AlarmService from "./src/services/alarm";
+import prisma from "./src/config/datasource";
 
 declare global {
     // prettier-ignore
@@ -106,3 +107,15 @@ schedule.scheduleJob("* * * * *", () => {
 // 봇 로그인
 // Log in to the bot
 client.login(config.BOT_TOKEN);
+
+process.on("SIGINT", async () => {
+    await client.destroy();
+    await prisma.$disconnect();
+    process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+    await client.destroy();
+    await prisma.$disconnect();
+    process.exit(0);
+});
