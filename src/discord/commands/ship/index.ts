@@ -140,6 +140,11 @@ export default new SlashCommand({
             choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id);
         }
 
+        if (interaction.options.getSubcommand() === "호출") {
+            const focusedValue = interaction.options.getFocused();
+            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id, "선장");
+        }
+
         await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     },
 
