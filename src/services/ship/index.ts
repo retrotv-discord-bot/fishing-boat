@@ -54,7 +54,10 @@ export default class ShipService {
             const [valid, message] = validateDate(alarmTime);
 
             if (!valid) {
-                return privateReply(interaction, message!!);
+                return privateReply(
+                    interaction,
+                    message ?? "출항 시간이 유효하지 않습니다. HH:MM 형식으로 입력해주세요.",
+                );
             }
 
             alarmTime = alarmTime?.replaceAll(" ", "");
@@ -350,7 +353,7 @@ export default class ShipService {
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(embarkButton);
 
         return interaction.reply({ embeds: [shipEmbed], components: [row] });
-    }
+    };
 
     // 하선
     public disembark = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
@@ -444,7 +447,7 @@ export default class ShipService {
                 .setTimestamp(new Date())
                 .setFooter({ text: "꼬르륵!" });
 
-            if (!interaction.channel || !interaction.channel.isTextBased() || !("send" in interaction.channel)) {
+            if (!interaction.channel?.isTextBased() || !("send" in interaction.channel)) {
                 return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
             }
 
@@ -470,12 +473,35 @@ export default class ShipService {
         let userMentions = crewIds.map((userId) => `<@${userId}>`).join(", ");
         userMentions = userMentions + ` 선원들! 지금 당장 ${shipName} 어선에 탑승하시오!`;
 
-        if (!channel || !channel.isTextBased() || !("send" in channel)) {
+        if (!channel?.isTextBased() || !("send" in channel)) {
             return privateReply(interaction, "채널에 메시지를 보낼 수 없습니다.");
         }
         await channel.send(userMentions);
 
         return privateReply(interaction, "어선에 탑승한 인원들에게 알림을 보냈습니다.");
+    };
+
+    // 오래된 어선 정리
+    public cleanOldVessels = async (): Promise<void> => {
+        // 7일 이상 된 vessels를 삭제
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        try {
+            await this.client.$transaction(async (tx) => {
+                const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                const vessels = await txVesselRepository.findSevenDaysOldVessels();
+                await txVesselRepository.deleteAll(vessels);
+            });
+
+            this.log.info("오래된 어선이 성공적으로 정리되었습니다.");
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                this.log.error("Error: " + err.message);
+            }
+        } finally {
+            await this.client.$disconnect();
+        }
     };
 
     // 어선명 자동완성

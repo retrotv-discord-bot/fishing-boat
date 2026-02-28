@@ -11,6 +11,7 @@ import { config } from "./config";
 
 import AlarmService from "./src/services/alarm";
 import prisma from "./src/config/datasource";
+import ShipService from "./src/services/ship";
 
 declare global {
     // prettier-ignore
@@ -98,10 +99,16 @@ events.forEach((event) => {
 });
 
 const alarmService = new AlarmService();
+const shipService = new ShipService();
 
 // 1분 마다 알람을 보내는 스케쥴러
 schedule.scheduleJob("* * * * *", () => {
     alarmService.sendAlarm(client);
+});
+
+// 매일 자정마다 7일 이상된 어선을 삭제하는 스케쥴러
+schedule.scheduleJob("0 0 * * *", () => {
+    shipService.cleanOldVessels();
 });
 
 // 봇 로그인

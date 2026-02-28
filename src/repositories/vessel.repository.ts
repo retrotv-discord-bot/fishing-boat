@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import Vessel from "../entities/vessel.entity";
 import Logger from "../config/logtape";
+import VesselEntity from "../entities/vessel.entity";
 
 export default class VesselRepository {
     private readonly client: PrismaClient;
@@ -57,6 +58,19 @@ export default class VesselRepository {
         });
     }
 
+    public async findSevenDaysOldVessels(): Promise<Vessel[]> {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        return await this.client.vessels.findMany({
+            where: {
+                createdAt: {
+                    lt: sevenDaysAgo,
+                },
+            },
+        });
+    }
+
     public async deleteVessel(vesselId: string): Promise<void> {
         // 어선 삭제
         await this.client.vessels.delete({
@@ -71,6 +85,17 @@ export default class VesselRepository {
             where: {
                 name: vesselName,
                 channelId: channelId,
+            },
+        });
+    }
+
+    public async deleteAll(vessels: VesselEntity[]): Promise<void> {
+        const vesselIds = vessels.map((v) => v.id);
+        await this.client.vessels.deleteMany({
+            where: {
+                id: {
+                    in: vesselIds,
+                },
             },
         });
     }

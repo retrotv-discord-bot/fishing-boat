@@ -1,6 +1,6 @@
 {
   "name": "fishing-boat",
-  "version": "2.3.0-beta",
+  "version": "2.4.0-beta",
   "description": "디스코드용 어선 봇",
   "license": "Apache-2.0",
   "author": "yjj8353@gmail.com",
@@ -22,7 +22,7 @@
     "@logtape/logtape": "^1.1.2",
     "@prisma/client": "^6.18.0",
     "@types/node-schedule": "^2.1.8",
-    "discord.js": "^14.23.2",
+    "discord.js": "^14.25.1",
     "dotenv": "^17.2.3",
     "node-schedule": "^2.1.1",
     "pm2": "^6.0.13"
