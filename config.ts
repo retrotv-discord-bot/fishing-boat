@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+dotenv.config({ quiet: true });
 
 let { BOT_TOKEN, BOT_ID, GUILD_ID, PREFIX } = process.env;
 
