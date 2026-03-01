@@ -382,7 +382,7 @@ export default class VesselService {
                 }
 
                 // 어선 하선
-                await txVesselCrewRepository.delete(crew.id, vessel.id);
+                await txVesselCrewRepository.delete(vessel.id, crew.id);
 
                 this.log.debug(`crew.id: ${crew.id}`);
                 this.log.debug(`crew.vessels[0] crewId: ${crew.vessels[0].crewId}`);
@@ -491,7 +491,25 @@ export default class VesselService {
         try {
             await this.client.$transaction(async (tx) => {
                 const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
+                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+
                 const vessels = await txVesselRepository.findSevenDaysOldVessels();
+                for(const vessel of vessels) {
+                    txVesselCrewRepository.delete(vessel.id);
+
+                    const allAlarms = await txAlarmRepository.findMany(vessel.name, vessel.channelId);
+                    if (allAlarms) {
+                        const deleteConditions = allAlarms.map((alarm) => ({
+                            vesselId: alarm.vesselId,
+                            alarmTime: alarm.alarmTime,
+                        }));
+
+                        // deleteMany를 사용하여 삭제
+                        await txAlarmRepository.deleteMany(deleteConditions);
+                    }
+                }
+
                 await txVesselRepository.deleteAll(vessels);
             });
 

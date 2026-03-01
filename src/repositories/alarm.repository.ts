@@ -20,7 +20,7 @@ export default class AlarmRepository {
             },
         });
 
-        if (savedAlarm !== null) {
+        if (savedAlarm) {
             savedAlarm = await this.client.alarms.update({
                 where: {
                     vesselId_alarmTime: {

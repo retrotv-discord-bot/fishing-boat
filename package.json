@@ -1,6 +1,6 @@
 {
   "name": "fishing-boat",
-  "version": "2.5.0-beta",
+  "version": "2.5.1-beta",
   "description": "디스코드용 어선 봇",
   "license": "Apache-2.0",
   "author": "yjj8353@gmail.com",
@@ -23,18 +23,18 @@
     "@prisma/client": "^6.18.0",
     "@types/node-schedule": "^2.1.8",
     "discord.js": "^14.25.1",
-    "dotenv": "^17.2.3",
+    "dotenv": "^17.3.1",
     "node-schedule": "^2.1.1",
-    "pm2": "^6.0.13"
+    "pm2": "^6.0.14"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^8.46.2",
-    "@typescript-eslint/parser": "^8.46.2",
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
     "eslint": "^9.38.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-prettier": "^5.5.4",
-    "prettier": "^3.6.2",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
     "prisma": "^6.18.0",
     "ts-node": "^10.9.2"
   }
