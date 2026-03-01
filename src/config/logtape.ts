@@ -11,7 +11,7 @@ configure({
     ],
 })
     .then(() => {
-        //console.log("Configuration complete");
+        console.log("Configuration complete");
     })
     .catch((error) => {
         console.error("Configuration failed", error);

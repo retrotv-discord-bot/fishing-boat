@@ -11,7 +11,7 @@ export default class AlarmService {
     private readonly alarmRepository: AlarmRepository;
     private readonly crewRepository: CrewRepository;
     private readonly vesselRepository: VesselRepository;
-    private readonly log = Logger(["bot", "ShipService"]);
+    private readonly log = Logger(["bot", "AlarmService"]);
 
     public constructor() {
         this.client = prisma;

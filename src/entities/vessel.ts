@@ -4,6 +4,6 @@ export default interface Vessel {
     channelId: string;
     capacity: number;
     description: string;
-    createdAt?: Date;
     canMidParticipation: string;
+    createdAt?: Date;
 }

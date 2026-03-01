@@ -11,7 +11,7 @@ import { config } from "./config";
 
 import AlarmService from "./src/services/alarm";
 import prisma from "./src/config/datasource";
-import ShipService from "./src/services/ship";
+import VesselService from "./src/services/vessel";
 
 declare global {
     // prettier-ignore
@@ -22,7 +22,7 @@ declare global {
     };
 }
 
-global.client = Object.assign(
+globalThis.client = Object.assign(
     new Client({
         intents: [
             /*
@@ -73,19 +73,19 @@ global.client = Object.assign(
 // 컨텍스트 메뉴 명령어 불러오기
 // Load context menu commands
 contextMenuCommands.forEach((command) => {
-    global.client.contextMenuCommands.set(command.data.name, command);
+    globalThis.client.contextMenuCommands.set(command.data.name, command);
 });
 
 // 슬래시 명령어 불러오기
 // Load slash commands
 slashCommands.forEach((command) => {
-    global.client.slashCommands.set(command.data.name, command);
+    globalThis.client.slashCommands.set(command.data.name, command);
 });
 
 // prefix 명령어 불러오기
 // Load prefix commands
 prefixCommands.forEach((command) => {
-    global.client.prefixCommands.set(command.name, command);
+    globalThis.client.prefixCommands.set(command.name, command);
 });
 
 // 이벤트 불러오기
@@ -99,7 +99,7 @@ events.forEach((event) => {
 });
 
 const alarmService = new AlarmService();
-const shipService = new ShipService();
+const vesselService = new VesselService();
 
 // 1분 마다 알람을 보내는 스케쥴러
 schedule.scheduleJob("* * * * *", () => {
@@ -108,7 +108,7 @@ schedule.scheduleJob("* * * * *", () => {
 
 // 매일 자정마다 7일 이상된 어선을 삭제하는 스케쥴러
 schedule.scheduleJob("0 0 * * *", () => {
-    shipService.cleanOldVessels();
+    vesselService.cleanOldVessels();
 });
 
 // 봇 로그인

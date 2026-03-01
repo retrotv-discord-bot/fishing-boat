@@ -1,12 +1,12 @@
 /* eslint-disable */
 import { SlashCommandBuilder } from "discord.js";
 
-import ShipService from "../../../services/ship";
+import VesselService from "../../../services/vessel";
 import SlashCommand from "../../../templates/slash-command";
 
-const shipService = new ShipService();
-const { createShip, embark, disembark, sinking, searchShips, searchCrewsInShip, callingSailor, getAllShips } =
-    shipService;
+const vesselService = new VesselService();
+const { createVessel, embark, disembark, sinking, searchVessels, searchCrewsInVessel, callingSailor, getAllVessels } =
+    vesselService;
 
 export default new SlashCommand({
     data: new SlashCommandBuilder()
@@ -122,27 +122,27 @@ export default new SlashCommand({
 
         if (interaction.options.getSubcommand() === "승선") {
             const focusedValue = interaction.options.getFocused();
-            choices = await getAllShips(focusedValue, interaction.channelId);
+            choices = await getAllVessels(focusedValue, interaction.channelId);
         }
 
         if (interaction.options.getSubcommand() === "침몰") {
             const focusedValue = interaction.options.getFocused();
-            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id, "선장");
+            choices = await getAllVessels(focusedValue, interaction.channelId, interaction.user.id, "선장");
         }
 
         if (interaction.options.getSubcommand() === "하선") {
             const focusedValue = interaction.options.getFocused();
-            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id);
+            choices = await getAllVessels(focusedValue, interaction.channelId, interaction.user.id);
         }
 
         if (interaction.options.getSubcommand() === "선원목록") {
             const focusedValue = interaction.options.getFocused();
-            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id);
+            choices = await getAllVessels(focusedValue, interaction.channelId, interaction.user.id);
         }
 
         if (interaction.options.getSubcommand() === "호출") {
             const focusedValue = interaction.options.getFocused();
-            choices = await getAllShips(focusedValue, interaction.channelId, interaction.user.id, "선장");
+            choices = await getAllVessels(focusedValue, interaction.channelId, interaction.user.id, "선장");
         }
 
         await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
@@ -150,16 +150,16 @@ export default new SlashCommand({
 
     async execute(interaction: any) {
         if (interaction.options.getSubcommand() === "건조") {
-            createShip(interaction);
+            createVessel(interaction);
         }
         if (interaction.options.getSubcommand() === "침몰") {
             sinking(interaction);
         }
         if (interaction.options.getSubcommand() === "목록") {
-            searchShips(interaction);
+            searchVessels(interaction);
         }
         if (interaction.options.getSubcommand() === "선원목록") {
-            searchCrewsInShip(interaction);
+            searchCrewsInVessel(interaction);
         }
         if (interaction.options.getSubcommand() === "승선") {
             embark(interaction);
@@ -171,13 +171,13 @@ export default new SlashCommand({
             disembark(interaction);
         }
         if (interaction.options.getSubcommand() === "여담") {
-            const shipEmbed = {
+            const vesselEmbed = {
                 color: 0x0099ff,
                 title: "어선 여담",
                 description:
                     "이 봇에 사용된 그림은 사실 어선이 아닌 상선의 그림입니다. 그리고 아주 유명한 유령선이죠.\n꺄아아아악!",
             };
-            return interaction.reply({ embeds: [shipEmbed] });
+            return interaction.reply({ embeds: [vesselEmbed] });
         }
     },
 });

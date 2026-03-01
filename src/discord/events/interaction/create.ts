@@ -6,10 +6,10 @@ import {
     ChatInputCommandInteraction,
 } from "discord.js";
 import Event from "../../../templates/event";
-import ShipService from "../../../services/ship";
+import VesselService from "../../../services/vessel";
 
-const shipService = new ShipService();
-const { embark } = shipService;
+const vesselService = new VesselService();
+const { embark } = vesselService;
 
 export default new Event({
     name: Events.InteractionCreate,

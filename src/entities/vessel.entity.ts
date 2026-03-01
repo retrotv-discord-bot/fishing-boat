@@ -6,8 +6,8 @@ export default class VesselEntity implements Vessel {
     channelId: string;
     capacity: number;
     description: string;
-    createdAt?: Date;
     canMidParticipation: string;
+    createdAt?: Date;
 
     constructor(
         id: string,
@@ -23,7 +23,7 @@ export default class VesselEntity implements Vessel {
         this.channelId = channelId;
         this.capacity = capacity;
         this.description = description;
-        this.createdAt = createdAt ?? new Date();
         this.canMidParticipation = canMidParticipation;
+        this.createdAt = createdAt ?? new Date();
     }
 }

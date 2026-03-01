@@ -1,7 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import Vessel from "../entities/vessel.entity";
 import Logger from "../config/logtape";
-import VesselEntity from "../entities/vessel.entity";
 
 export default class VesselRepository {
     private readonly client: PrismaClient;
@@ -12,7 +11,7 @@ export default class VesselRepository {
     }
 
     public async save(vessel: Vessel): Promise<Vessel | null> {
-        let savedVessel: Vessel | null = await this.client.vessels.findUnique({
+        let savedVessel = await this.client.vessels.findUnique({
             where: {
                 id: vessel.id,
             },
@@ -89,7 +88,7 @@ export default class VesselRepository {
         });
     }
 
-    public async deleteAll(vessels: VesselEntity[]): Promise<void> {
+    public async deleteAll(vessels: Vessel[]): Promise<void> {
         const vesselIds = vessels.map((v) => v.id);
         await this.client.vessels.deleteMany({
             where: {
@@ -112,7 +111,7 @@ export default class VesselRepository {
     }
 
     public async findVesselsName(
-        shipsName: string,
+        vesselsName: string,
         channelId: string,
         crewId?: string,
         position?: string,
@@ -133,7 +132,7 @@ export default class VesselRepository {
                     some: {
                         vessel: {
                             name: {
-                                contains: shipsName,
+                                contains: vesselsName,
                             },
                             channelId: channelId,
                         },
@@ -153,15 +152,15 @@ export default class VesselRepository {
             },
         });
 
-        const uniqueShipNames: string[] = [];
+        const uniqueVesselNames: string[] = [];
         results.forEach((crew) => {
-            crew.vessels.forEach((crewShip) => {
-                if (crewShip.vessel.name && !uniqueShipNames.includes(crewShip.vessel.name)) {
-                    uniqueShipNames.push(crewShip.vessel.name);
+            crew.vessels.forEach((crewVessel) => {
+                if (crewVessel.vessel.name && !uniqueVesselNames.includes(crewVessel.vessel.name)) {
+                    uniqueVesselNames.push(crewVessel.vessel.name);
                 }
             });
         });
 
-        return uniqueShipNames;
+        return uniqueVesselNames;
     }
 }
