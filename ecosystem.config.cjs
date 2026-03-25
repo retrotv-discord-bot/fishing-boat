@@ -17,7 +17,7 @@ module.exports = {
             kill_timeout: 10000,
             time: true,
             env: {
-                NODE_ENV: "production",
+                NODE_ENV: "prod",
             },
         },
     ],
