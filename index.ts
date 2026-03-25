@@ -125,9 +125,14 @@ const cleanOldVesselsCron = new Cron("0 0 * * *", { timezone: "Asia/Seoul", name
 });
 logger.debug(cleanOldVesselsCron.name, " cron started");
 
-// 봇 로그인
-// Log in to the bot
-await globalThis.client.login(config.BOT_TOKEN);
+/*
+ * 봇 로그인
+ * Log in to the bot
+ */
+// eslint-disable-next-line @typescript-eslint/no-floating-promises
+(async () => { // NOSONAR
+    await globalThis.client.login(config.BOT_TOKEN);
+})();
 
 process.on("SIGINT", () => {
     void (async () => {

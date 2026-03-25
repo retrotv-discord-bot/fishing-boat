@@ -15,9 +15,9 @@
     "format:write": "prettier . --write",
     "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:restart": "pm2 restart ecosystem.config.cjs",
-    "pm2:stop": "pm2 stop fishing-vessel",
-    "pm2:delete": "pm2 delete fishing-vessel",
-    "pm2:logs": "pm2 logs fishing-vessel",
+    "pm2:stop": "pm2 stop fishing-vessel-bot",
+    "pm2:delete": "pm2 delete fishing-vessel-bot",
+    "pm2:logs": "pm2 logs fishing-vessel-bot",
     "pm2:logrotate:install": "pm2 install pm2-logrotate",
     "pm2:logrotate:daily": "pm2 set pm2-logrotate:rotateInterval '0 0 * * *' && pm2 set pm2-logrotate:dateFormat 'YYYY-MM-DD' && pm2 set pm2-logrotate:retain 14 && pm2 set pm2-logrotate:max_size 100M && pm2 set pm2-logrotate:compress true"
   },
