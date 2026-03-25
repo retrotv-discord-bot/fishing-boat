@@ -1,12 +1,11 @@
-import { PrismaClient } from "@prisma/client";
-import Vessel from "../entities/vessel.entity";
-import Logger from "../config/logtape";
+import type { PrismaExtendedClient } from "../config/datasource";
+import { logger } from "../config/logger";
+import type Vessel from "../entities/vessel.entity";
 
 export default class VesselRepository {
-    private readonly client: PrismaClient;
-    private readonly log = Logger(["bot", "VesselRepository"]);
+    private readonly client: PrismaExtendedClient;
 
-    constructor(client: PrismaClient) {
+    constructor(client: PrismaExtendedClient) {
         this.client = client;
     }
 
@@ -19,7 +18,7 @@ export default class VesselRepository {
 
         // 이미 존재하는 어선인 경우, 예외 발생
         if (savedVessel !== null) {
-            this.log.debug("이미 존재하는 어선입니다.");
+            logger.debug("이미 존재하는 어선입니다.");
             throw new Error("이미 존재하는 어선입니다.");
         }
 
@@ -27,7 +26,7 @@ export default class VesselRepository {
             data: vessel,
         });
 
-        this.log.info("어선이 성공적으로 저장되었습니다.");
+        logger.info("어선이 성공적으로 저장되었습니다.");
 
         return savedVessel;
     }

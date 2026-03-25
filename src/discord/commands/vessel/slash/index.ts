@@ -1,4 +1,9 @@
-import { SlashCommandBuilder } from "discord.js";
+import {
+    AutocompleteInteraction,
+    ChatInputCommandInteraction,
+    InteractionResponse,
+    SlashCommandBuilder
+} from "discord.js";
 
 import VesselService from "../../../../services/vessel";
 import SlashCommand from "../../../../templates/slash-command";
@@ -115,9 +120,9 @@ export default new SlashCommand({
 
         .addSubcommand((subcommand) => subcommand.setName("여담").setDescription("이 봇에 대한 여담을 알려드립니다.")),
 
-    async autocomplete(interaction: any) {
+    async autocomplete(interaction: AutocompleteInteraction) {
         const focusedValue = interaction.options.getFocused(false);
-        let choices: string[] = [];
+        let choices: string[];
 
         switch (interaction.options.getSubcommand()) {
             case "승선":
@@ -142,28 +147,28 @@ export default new SlashCommand({
         await interaction.respond(choices.map((choice) => ({ name: choice, value: choice })));
     },
 
-    async execute(interaction: any) {
+    async execute(interaction: ChatInputCommandInteraction): Promise<void | InteractionResponse<boolean>> {
         switch (interaction.options.getSubcommand()) {
             case "건조":
-                createVessel(interaction);
+                await createVessel(interaction);
                 break;
             case "침몰":
-                sinking(interaction);
+                await sinking(interaction);
                 break;
             case "목록":
-                searchVessels(interaction);
+                await searchVessels(interaction);
                 break;
             case "선원목록":
-                searchCrewsInVessel(interaction);
+                await searchCrewsInVessel(interaction);
                 break;
             case "승선":
-                embark(interaction);
+                await embark(interaction);
                 break;
             case "호출":
-                callingSailor(interaction);
+                await callingSailor(interaction);
                 break;
             case "하선":
-                disembark(interaction);
+                await disembark(interaction);
                 break;
             case "여담":
                 return interaction.reply({

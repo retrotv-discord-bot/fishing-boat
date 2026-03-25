@@ -7,6 +7,7 @@ import {
 } from "discord.js";
 import Event from "../../../templates/event";
 import VesselService from "../../../services/vessel";
+import { logger } from "../../../config/logger";
 
 const vesselService = new VesselService();
 const { embark } = vesselService;
@@ -20,10 +21,10 @@ export default new Event({
         } else if (interaction.isAutocomplete()) {
             await autocomplete(interaction);
         } else if (interaction.isContextMenuCommand()) {
-            const command = client.contextMenuCommands.get(interaction.commandName);
+            const command = globalThis.client.contextMenuCommands.get(interaction.commandName);
 
             if (!command) {
-                console.error(`No command matching ${interaction.commandName} was found.`);
+                logger.error(`No command matching ${interaction.commandName} was found.`);
                 return;
             }
 
@@ -32,7 +33,7 @@ export default new Event({
                     await command.execute(interaction);
                 }
             } catch (error) {
-                console.error(error);
+                logger.error(error);
                 if (interaction.replied || interaction.deferred) {
                     await interaction.followUp({
                         content: "There was an error while executing this command!",
@@ -58,7 +59,7 @@ async function chatInputCommand(interaction: ChatInputCommandInteraction) {
     const command = client.slashCommands.get(interaction.commandName);
 
     if (!command) {
-        console.error(`No command matching ${interaction.commandName} was found.`);
+        logger.error(`No command matching ${interaction.commandName} was found.`);
         return;
     }
 
@@ -67,7 +68,7 @@ async function chatInputCommand(interaction: ChatInputCommandInteraction) {
             await command.execute(interaction);
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
         if (interaction.replied || interaction.deferred) {
             await interaction.followUp({
                 content: "There was an error while executing this command!",
@@ -86,7 +87,7 @@ async function autocomplete(interaction: AutocompleteInteraction) {
     const command = client.slashCommands.get(interaction.commandName);
 
     if (!command) {
-        console.error(`No command matching ${interaction.commandName} was found.`);
+        logger.error(`No command matching ${interaction.commandName} was found.`);
         return;
     }
 
@@ -95,6 +96,6 @@ async function autocomplete(interaction: AutocompleteInteraction) {
             await command.autocomplete(interaction);
         }
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 }

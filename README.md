@@ -1,4 +1,4 @@
-# fishing-boat
+# fising-boat-new
 
 To install dependencies:
 

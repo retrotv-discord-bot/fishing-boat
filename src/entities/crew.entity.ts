@@ -1,4 +1,4 @@
-import Crew from "./crew";
+import type Crew from "./crew";
 
 export default class CrewEntity implements Crew {
     id: string;

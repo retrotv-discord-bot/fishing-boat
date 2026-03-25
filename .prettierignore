@@ -1,7 +1,9 @@
-.eslintrc.json
-.prettierrc
+node_modules
+bun.lock
+dist
+coverage
 eslint.config.js
-package.json
-package-lock.json
-tsconfig.json
-pm2.json
+*.json
+
+# prisma generated
+generated/

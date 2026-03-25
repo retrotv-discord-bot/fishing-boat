@@ -1,4 +1,4 @@
-import Alarm from "./alarm";
+import type Alarm from "./alarm";
 
 export default class AlarmEntity implements Alarm {
     vesselId: string;

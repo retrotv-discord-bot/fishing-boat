@@ -1,12 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import Alarm from "../entities/alarm";
-import Logger from "../config/logtape";
+import type Alarm from "../entities/alarm";
+import type { PrismaExtendedClient } from "../config/datasource";
 
 export default class AlarmRepository {
-    private readonly client: PrismaClient;
-    private readonly log = Logger(["bot", "AlarmRepository"]);
+    private readonly client: PrismaExtendedClient;
 
-    constructor(client: PrismaClient) {
+    constructor(client: PrismaExtendedClient) {
         this.client = client;
     }
 

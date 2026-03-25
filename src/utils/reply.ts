@@ -1,4 +1,4 @@
-import { EmbedBuilder, MessageFlags, RepliableInteraction } from "discord.js";
+import { EmbedBuilder, MessageFlags, type RepliableInteraction } from "discord.js";
 
 // overload signatures
 export function privateReply(

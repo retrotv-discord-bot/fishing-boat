@@ -1,17 +1,16 @@
-import { PrismaClient } from "@prisma/client";
-import prisma from "../../config/datasource";
+import { prisma, type PrismaExtendedClient } from "../../config/datasource";
 
-import Logger from "../../config/logtape";
 import AlarmRepository from "../../repositories/alarm.repository";
 import CrewRepository from "../../repositories/crew.repository";
 import VesselRepository from "../../repositories/vessel.repository";
+import { logger } from "../../config/logger";
+import { TextChannel, type Client } from "discord.js";
 
 export default class AlarmService {
-    private readonly client: PrismaClient;
+    private readonly client: PrismaExtendedClient;
     private readonly alarmRepository: AlarmRepository;
     private readonly crewRepository: CrewRepository;
     private readonly vesselRepository: VesselRepository;
-    private readonly log = Logger(["bot", "AlarmService"]);
 
     public constructor() {
         this.client = prisma;
@@ -20,7 +19,7 @@ export default class AlarmService {
         this.vesselRepository = new VesselRepository(this.client);
     }
 
-    public sendAlarm = async (client: any): Promise<void> => {
+    public sendAlarm = async (client: Client): Promise<void> => {
         // 현재 시간과 동일하거나 이전인 알람들을 조회
         const alarms = await this.alarmRepository.findAlarmsTriggered();
 
@@ -28,18 +27,18 @@ export default class AlarmService {
             return;
         }
 
-        this.log.info(`알람이 ${alarms.length}개 있습니다.`);
+        logger.info(`알람이 ${alarms.length}개 있습니다.`);
 
         // 알람 작동
         for (const alarm of alarms) {
             const vessel = await this.vesselRepository.findById(alarm.vesselId);
             if (vessel === null) {
-                this.log.info(`알람이 설정된 어선 ${alarm.vesselId} 이 존재하지 않습니다.`);
+                logger.info(`알람이 설정된 어선 ${alarm.vesselId} 이 존재하지 않습니다.`);
                 continue;
             }
 
-            this.log.info(`어선 명: ${vessel.name}`);
-            this.log.info(`채널 ID: ${vessel.channelId}`);
+            logger.info(`어선 명: ${vessel.name}`);
+            logger.info(`채널 ID: ${vessel.channelId}`);
 
             const vesselName = vessel.name;
             const channelId = vessel.channelId;
@@ -57,14 +56,16 @@ export default class AlarmService {
 
             try {
                 const channel = await client.channels.fetch(channelId);
-                channel.send(userMentions);
+                if (channel !== null && channel instanceof TextChannel) {
+                    await channel.send(userMentions);
+                }
             } catch {
-                this.log.error(`${channelId} 채널이 존재하지 않습니다.`);
+                logger.error(`${channelId} 채널이 존재하지 않습니다.`);
             }
 
             try {
                 await this.client.$transaction(async (tx) => {
-                    const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+                    const txAlarmRepository = new AlarmRepository(tx as PrismaExtendedClient);
                     return await txAlarmRepository.save({
                         vesselId: alarm.vesselId,
                         alarmTime: alarm.alarmTime,
@@ -72,13 +73,13 @@ export default class AlarmService {
                     });
                 });
 
-                this.log.debug(`${vesselName} 어선에 알람 보냄`);
+                logger.debug(`${vesselName} 어선에 알람 보냄`);
             } catch (err: unknown) {
                 if (err instanceof Error) {
-                    this.log.error("Error: " + err);
+                    logger.error("Error: " + err.message);
                 }
             } finally {
-                this.client.$disconnect();
+                await this.client.$disconnect();
             }
         }
     };

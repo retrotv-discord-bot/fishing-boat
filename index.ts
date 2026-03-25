@@ -1,4 +1,4 @@
-import schedule from "node-schedule";
+import { Cron } from "croner";
 
 import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
 import ContextMenuCommand from "./src/templates/context-menu-command";
@@ -10,8 +10,9 @@ import { events } from "./src/discord/events";
 import { config } from "./config";
 
 import AlarmService from "./src/services/alarm";
-import prisma from "./src/config/datasource";
+import { prisma } from "./src/config/datasource";
 import VesselService from "./src/services/vessel";
+import { logger } from "./src/config/logger";
 
 declare global {
     // prettier-ignore
@@ -90,39 +91,60 @@ prefixCommands.forEach((command) => {
 
 // 이벤트 불러오기
 // Load events
-events.forEach((event) => {
+for (const event of events) {
     if (event.once) {
-        client.once(event.name, (...args) => event.execute(...args));
+        globalThis.client.once(event.name, (...args) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            Promise.resolve(event.execute(...args)).catch((err) => {
+                logger.error(err, `Error in event: ${event.name}`);
+            });
+        });
     } else {
-        client.on(event.name, (...args) => event.execute(...args));
+        globalThis.client.on(event.name, (...args) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+            Promise.resolve(event.execute(...args)).catch((err) => {
+                logger.error(err, `Error in event: ${event.name}`);
+            });
+        });
     }
-});
+}
 
 const alarmService = new AlarmService();
 const vesselService = new VesselService();
 
 // 1분 마다 알람을 보내는 스케쥴러
-schedule.scheduleJob("* * * * *", () => {
-    alarmService.sendAlarm(client);
+const alarmCron = new Cron("* * * * *", { timezone: "Asia/Seoul", name: "Alarm" }, async () => {
+    await alarmService.sendAlarm(globalThis.client);
 });
 
+logger.debug(alarmCron.name, " cron started");
+
 // 매일 자정마다 7일 이상된 어선을 삭제하는 스케쥴러
-schedule.scheduleJob("0 0 * * *", () => {
-    vesselService.cleanOldVessels();
+const cleanOldVesselsCron = new Cron("0 0 * * *", { timezone: "Asia/Seoul", name: "CleanOldVessels" }, async () => {
+    await vesselService.cleanOldVessels();
 });
+logger.debug(cleanOldVesselsCron.name, " cron started");
 
 // 봇 로그인
 // Log in to the bot
-client.login(config.BOT_TOKEN);
+await globalThis.client.login(config.BOT_TOKEN);
 
-process.on("SIGINT", async () => {
-    await client.destroy();
-    await prisma.$disconnect();
-    process.exit(0);
+process.on("SIGINT", () => {
+    void (async () => {
+        await globalThis.client.destroy();
+        await prisma.$disconnect();
+
+        // eslint-disable-next-line n/no-process-exit
+        process.exit(0);
+    })();
 });
 
-process.on("SIGTERM", async () => {
-    await client.destroy();
-    await prisma.$disconnect();
-    process.exit(0);
+process.on("SIGTERM", () => {
+    void (async () => {
+        await globalThis.client.destroy();
+        await prisma.$disconnect();
+
+        // eslint-disable-next-line n/no-process-exit
+        process.exit(0);
+    })();
 });

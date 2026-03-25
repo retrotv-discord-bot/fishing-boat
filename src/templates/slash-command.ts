@@ -1,6 +1,7 @@
 import type {
     AutocompleteInteraction,
     ChatInputCommandInteraction,
+    InteractionResponse,
     SlashCommandBuilder,
     SlashCommandOptionsOnlyBuilder,
     SlashCommandSubcommandsOnlyBuilder,
@@ -8,12 +9,12 @@ import type {
 
 export default class SlashCommand {
     data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder;
-    execute?: (interaction: ChatInputCommandInteraction) => Promise<void> | void;
+    execute?: (interaction: ChatInputCommandInteraction) => Promise<void | InteractionResponse<boolean>> | void;
     autocomplete?: (interaction: AutocompleteInteraction) => Promise<void> | void;
 
     constructor(options: {
         data: SlashCommandBuilder | SlashCommandSubcommandsOnlyBuilder | SlashCommandOptionsOnlyBuilder;
-        execute?: (interaction: ChatInputCommandInteraction) => Promise<void> | void;
+        execute?: (interaction: ChatInputCommandInteraction) => Promise<void | InteractionResponse<boolean>> | void;
         autocomplete?: (interaction: AutocompleteInteraction) => Promise<void> | void;
     }) {
         this.data = options.data;

@@ -2,6 +2,7 @@ import { Events, Message } from "discord.js";
 import Event from "../../../templates/event";
 import { config } from "../../../../config";
 import PrefixCommand from "../../../templates/prefix-command";
+import { logger } from "../../../config/logger";
 
 export default new Event({
     name: Events.MessageCreate,
@@ -30,7 +31,7 @@ export default new Event({
         try {
             await command.execute(message, args);
         } catch (error) {
-            console.error(error);
+            logger.error(error);
         }
     },
 });

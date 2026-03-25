@@ -1,13 +1,10 @@
-import { PrismaClient } from "@prisma/client";
-import Logger from "../config/logtape";
-import VesselCrew from "../entities/vesselCrew";
-import Crew from "../entities/crew";
+import type VesselCrew from "../entities/vesselCrew";
+import type Crew from "../entities/crew";
+import type { PrismaExtendedClient } from "../config/datasource";
 
 export default class VesselCrewRepository {
-    private readonly client: PrismaClient;
-    private readonly log = Logger(["bot", "VesselCrewRepository"]);
-
-    constructor(client: PrismaClient) {
+    private readonly client: PrismaExtendedClient;
+    constructor(client: PrismaExtendedClient) {
         this.client = client;
     }
 

@@ -1,6 +1,7 @@
 import { REST, Routes } from "discord.js";
 import { config } from "../../../config";
 import { contextMenuCommands, slashCommands } from ".";
+import { logger } from "../../config/logger";
 
 const commandsData = [
     ...Object.values(slashCommands).map((command) => command.data),
@@ -23,6 +24,6 @@ export async function deployCommands({ guildId }: DeployCommandsProps) {
             body: commandsData,
         });
     } catch (error) {
-        console.error(error);
+        logger.error(error);
     }
 }

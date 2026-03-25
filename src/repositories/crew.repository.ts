@@ -1,12 +1,12 @@
-import { PrismaClient } from "@prisma/client";
-import Crew from "../entities/crew";
-import Logger from "../config/logtape";
+import type Crew from "../entities/crew";
+import type { PrismaExtendedClient } from "../config/datasource";
+import type VesselCrew from "../entities/vesselCrew";
 
 export default class CrewRepository {
-    private readonly client: PrismaClient;
-    private readonly log = Logger(["bot", "CrewRepository"]);
+    private readonly client: PrismaExtendedClient;
 
-    constructor(client: PrismaClient) {
+
+    constructor(client: PrismaExtendedClient) {
         this.client = client;
     }
 
@@ -41,14 +41,17 @@ export default class CrewRepository {
         vesselName: string,
         channelId: string,
         crewId: string,
-    ): Promise<
-        | ({ vessels: { vesselId: string; crewId: string; position: string }[] } & {
-              id: string;
-              name: string;
-              globalName: string;
-          })
-        | null
-    > {
+    ): Promise<(
+        {
+            vessels: VesselCrew[]
+        }
+        &
+        {
+            id: string;
+            name: string;
+            globalName: string;
+        }
+    ) | null> {
         return await this.client.crews.findUnique({
             where: {
                 id: crewId,
@@ -164,20 +167,26 @@ export default class CrewRepository {
     }
 
     public async findMany(vesselName: string, channelId: string): Promise<Crew[]> {
-        return await this.client.crews.findMany({
-            where: {
-                vessels: {
-                    some: {
-                        vessel: {
-                            name: vesselName,
-                            channelId: channelId,
-                        },
+        const whereClause = {
+            vessels: {
+                some: {
+                    vessel: {
+                        name: vesselName,
+                        channelId,
                     },
                 },
             },
-            include: {
-                vessels: true,
-            },
+        };
+
+        const includeClause = {
+            vessels: true,
+        };
+
+        const crews = await this.client.crews.findMany({
+            where: whereClause,
+            include: includeClause,
         });
+
+        return crews;
     }
 }

@@ -1,4 +1,4 @@
-import Vessel from "./vessel";
+import type Vessel from "./vessel";
 
 export default class VesselEntity implements Vessel {
     id: string;

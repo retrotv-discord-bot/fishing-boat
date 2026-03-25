@@ -1,4 +1,4 @@
-import VesselCrew from "./vesselCrew";
+import type VesselCrew from "./vesselCrew";
 
 export default class VesselCrewEntity implements VesselCrew {
     vesselId: string;

@@ -1,9 +1,7 @@
-import { PrismaClient } from "@prisma/client";
-import prisma from "../../config/datasource";
+import  {prisma, type PrismaExtendedClient } from "../../config/datasource";
 
 import { validateDate } from "../../utils/time";
 
-import Logger from "../../config/logtape";
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -13,7 +11,7 @@ import {
     InteractionResponse,
     MessageComponentInteraction,
     MessageFlags,
-    RepliableInteraction,
+    type RepliableInteraction,
 } from "discord.js";
 
 import { digestSha3512 } from "../../utils/cryptography";
@@ -22,21 +20,21 @@ import AlarmRepository from "../../repositories/alarm.repository";
 import CrewRepository from "../../repositories/crew.repository";
 import CrewEntity from "../../entities/crew.entity";
 import AlarmEntity from "../../entities/alarm.entity";
-import Vessel from "../../entities/vessel";
+import type Vessel from "../../entities/vessel";
 import VesselEntity from "../../entities/vessel.entity";
 import VesselCrewRepository from "../../repositories/vesselCrew.repository";
 import VesselCrewEntity from "../../entities/vesselCrew.entity";
 import { privateReply } from "../../utils/reply";
-import Crew from "../../entities/crew";
+import type Crew from "../../entities/crew";
+import { logger } from "../../config/logger";
 
 export default class VesselService {
     private readonly DEFAULT_DESCRIPTION = "설명이 없습니다.";
 
-    private readonly client: PrismaClient;
+    private readonly client: PrismaExtendedClient;
     private readonly alarmsRepository;
     private readonly crewRepository;
     private readonly vesselRepository;
-    private readonly log = Logger(["bot", "VesselService"]);
 
     public constructor() {
         this.client = prisma;
@@ -106,10 +104,10 @@ export default class VesselService {
         let savedVessel;
         try {
             savedVessel = await this.client.$transaction(async (tx) => {
-                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
-                const txCrewRepository = new CrewRepository(tx as PrismaClient);
-                const txVesselRepository = new VesselRepository(tx as PrismaClient);
-                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
+                const txAlarmRepository = new AlarmRepository(tx as PrismaExtendedClient);
+                const txCrewRepository = new CrewRepository(tx as PrismaExtendedClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaExtendedClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaExtendedClient);
 
                 const v = await txVesselRepository.save(newVessel);
                 await txCrewRepository.save(captain);
@@ -130,7 +128,7 @@ export default class VesselService {
             });
         } catch (err: unknown) {
             if (err instanceof Error) {
-                this.log.error("Error: " + err.message);
+                logger.error("Error: " + err.message);
             }
 
             return privateReply(interaction, "어선 생성에 실패했습니다.");
@@ -181,17 +179,17 @@ export default class VesselService {
         // 어선 삭제
         try {
             await this.client.$transaction(async (tx) => {
-                const txVesselRepository = new VesselRepository(tx as PrismaClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaExtendedClient);
                 await txVesselRepository.deleteVessel(vessel.id);
             });
 
-            this.log.info("어선이 성공적으로 침몰되었습니다.");
+            logger.info("어선이 성공적으로 침몰되었습니다.");
         } catch (err: unknown) {
             if (err instanceof Error) {
-                this.log.error("Error: " + err.message);
+                logger.error("Error: " + err.message);
             }
 
-            privateReply(interaction, "어선이 침몰하지 않았습니다.");
+            await privateReply(interaction, "어선이 침몰하지 않았습니다.");
         }
 
         const vesselEmbed = new EmbedBuilder()
@@ -310,12 +308,12 @@ export default class VesselService {
         }
 
         try {
-            this.log.debug("===== 어선 승선 시작 =====");
-            this.log.debug(`유저 ID: ${crewId}`);
-            this.log.debug(`유저 이름: ${crewName}`);
-            this.log.debug(`유저 글로벌 이름: ${crewGlobalName}`);
-            this.log.debug(`어선 ID: ${vessel.id}`);
-            this.log.debug("유저 역할: 선원");
+            logger.debug("===== 어선 승선 시작 =====");
+            logger.debug(`유저 ID: ${crewId}`);
+            logger.debug(`유저 이름: ${crewName}`);
+            logger.debug(`유저 글로벌 이름: ${crewGlobalName}`);
+            logger.debug(`어선 ID: ${vessel.id}`);
+            logger.debug("유저 역할: 선원");
 
             const newCrew: Crew = {
                 id: crewId,
@@ -324,19 +322,19 @@ export default class VesselService {
             };
 
             await this.client.$transaction(async (tx) => {
-                const txCrewRepository = new CrewRepository(tx as PrismaClient);
+                const txCrewRepository = new CrewRepository(tx as PrismaExtendedClient);
                 await txCrewRepository.embarkCrew(newCrew, vessel.id);
             });
 
-            this.log.debug("===== 어선 승선 완료 =====");
+            logger.debug("===== 어선 승선 완료 =====");
         } catch (err) {
             if (err instanceof Error) {
-                this.log.error("Error: " + err.message);
+                logger.error("Error: " + err.message);
             }
 
             return privateReply(interaction as RepliableInteraction, "어선 승선에 실패했습니다.");
         } finally {
-            this.client.$disconnect();
+            await this.client.$disconnect();
         }
 
         const vesselEmbed = new EmbedBuilder()
@@ -370,10 +368,10 @@ export default class VesselService {
         let isCaptain = false;
         try {
             await this.client.$transaction(async (tx) => {
-                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
-                const txCrewRepository = new CrewRepository(tx as PrismaClient);
-                const txVesselRepository = new VesselRepository(tx as PrismaClient);
-                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
+                const txAlarmRepository = new AlarmRepository(tx as PrismaExtendedClient);
+                const txCrewRepository = new CrewRepository(tx as PrismaExtendedClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaExtendedClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaExtendedClient);
 
                 const vessel = await txVesselRepository.findByNameAndChannelId(vesselName, channelId);
 
@@ -384,13 +382,13 @@ export default class VesselService {
                 // 어선 하선
                 await txVesselCrewRepository.delete(vessel.id, crew.id);
 
-                this.log.debug(`crew.id: ${crew.id}`);
-                this.log.debug(`crew.vessels[0] crewId: ${crew.vessels[0].crewId}`);
-                this.log.debug(`crew.vessels[0] vesselId: ${crew.vessels[0].vesselId}`);
-                this.log.debug(`crew.vessels[0] position: ${crew.vessels[0].position}`);
+                logger.debug(`crew.id: ${crew.id}`);
+                logger.debug(`crew.vessels[0] crewId: ${crew.vessels[0]?.crewId}`);
+                logger.debug(`crew.vessels[0] vesselId: ${crew.vessels[0]?.vesselId}`);
+                logger.debug(`crew.vessels[0] position: ${crew.vessels[0]?.position}`);
 
-                if (crew.vessels[0].position === "선장") {
-                    this.log.debug("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
+                if (crew.vessels[0]?.position === "선장") {
+                    logger.debug("현재 유저의 역할이 선장입니다. 어선도 같이 침몰합니다.");
 
                     isCaptain = true;
 
@@ -400,7 +398,7 @@ export default class VesselService {
                         await txVesselCrewRepository.deleteMany(allCrews);
                     }
 
-                    this.log.debug("모든 유저를 삭제했습니다.");
+                    logger.debug("모든 유저를 삭제했습니다.");
 
                     // 알람 삭제
                     const allAlarms = await txAlarmRepository.findMany(vesselName, channelId);
@@ -414,17 +412,17 @@ export default class VesselService {
                         await txAlarmRepository.deleteMany(deleteConditions);
                     }
 
-                    this.log.debug("모든 알람을 삭제했습니다.");
+                    logger.debug("모든 알람을 삭제했습니다.");
 
                     // 어선 삭제
                     await txVesselRepository.deleteMany(vesselName, channelId);
 
-                    this.log.debug("어선을 삭제했습니다.");
+                    logger.debug("어선을 삭제했습니다.");
                 }
             });
         } catch (err) {
             if (err instanceof Error) {
-                this.log.error("Error: " + err.message);
+                logger.error("Error: " + err.message);
             }
 
             return privateReply(interaction, "어선 하선에 실패했습니다.");
@@ -490,13 +488,13 @@ export default class VesselService {
 
         try {
             await this.client.$transaction(async (tx) => {
-                const txVesselRepository = new VesselRepository(tx as PrismaClient);
-                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaClient);
-                const txAlarmRepository = new AlarmRepository(tx as PrismaClient);
+                const txVesselRepository = new VesselRepository(tx as PrismaExtendedClient);
+                const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaExtendedClient);
+                const txAlarmRepository = new AlarmRepository(tx as PrismaExtendedClient);
 
                 const vessels = await txVesselRepository.findSevenDaysOldVessels();
                 for(const vessel of vessels) {
-                    txVesselCrewRepository.delete(vessel.id);
+                    await txVesselCrewRepository.delete(vessel.id);
 
                     const allAlarms = await txAlarmRepository.findMany(vessel.name, vessel.channelId);
                     if (allAlarms) {
@@ -513,10 +511,10 @@ export default class VesselService {
                 await txVesselRepository.deleteAll(vessels);
             });
 
-            this.log.info("오래된 어선이 성공적으로 정리되었습니다.");
+            logger.info("오래된 어선이 성공적으로 정리되었습니다.");
         } catch (err: unknown) {
             if (err instanceof Error) {
-                this.log.error("Error: " + err.message);
+                logger.error("Error: " + err.message);
             }
         } finally {
             await this.client.$disconnect();
