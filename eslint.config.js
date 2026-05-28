@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 
 export default defineConfig(
   {
-    ignores: ["node_modules/", "bun.lock", "dist/", "coverage/", "generated/", "prisma/"],
+    ignores: ["node_modules/", "dist/", "coverage/", "generated/", "prisma/"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
@@ -18,7 +18,6 @@ export default defineConfig(
         projectService: true,
       },
       globals: {
-        ...globals.bun,
         ...globals.node,
       },
     },
