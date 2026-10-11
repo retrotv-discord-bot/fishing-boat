@@ -176,6 +176,7 @@ export default class VesselService {
             return privateReply(interaction, "해당 어선이 존재하지 않습니다.");
         }
 
+        // 침몰 요청을 보낸 유저가 선장인지 확인
         if (!(await this.crewRepository.isCaptain(clientId, vessel.id))) {
             return privateReply(interaction, "어선의 선장만 침몰시킬 수 있습니다.");
         }
@@ -247,7 +248,6 @@ export default class VesselService {
 
         const crewsName = crews.map((crew) => crew.globalName);
         const crewMentions = crewsName.map((crewName) => `${crewName}`).join("\n");
-
         const crewsEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(vesselName)
@@ -360,6 +360,7 @@ export default class VesselService {
 
     // 하선
     public disembark = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
+        const channelName = getChannelName(interaction);
         const crewId = interaction.user.id;
         const vesselName = interaction.options.getString("선명")!;
         const channelId = interaction.channelId;
@@ -378,7 +379,6 @@ export default class VesselService {
                 const txVesselCrewRepository = new VesselCrewRepository(tx as PrismaExtendedClient);
 
                 const vessel = await txVesselRepository.findByNameAndChannelId(vesselName, channelId);
-
                 if (vessel === null) {
                     return privateReply(interaction, "해당 어선이 존재하지 않습니다.");
                 }
