@@ -22,27 +22,27 @@
     "pm2:logrotate:daily": "pm2 set pm2-logrotate:rotateInterval '0 0 * * *' && pm2 set pm2-logrotate:dateFormat 'YYYY-MM-DD' && pm2 set pm2-logrotate:retain 14 && pm2 set pm2-logrotate:max_size 100M && pm2 set pm2-logrotate:compress true"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.3",
-    "@prisma/adapter-better-sqlite3": "^7.8.0",
-    "@prisma/adapter-libsql": "^7.8.0",
-    "@prisma/client": "^7.8.0",
+    "@libsql/client": "^0.18.0",
+    "@prisma/adapter-better-sqlite3": "^7",
+    "@prisma/adapter-libsql": "^7",
+    "@prisma/client": "^7",
     "croner": "^10",
-    "discord.js": "^14.26.4",
-    "dotenv": "^17.4.2",
+    "discord.js": "^14",
+    "dotenv": "^18",
     "pino": "^10"
   },
   "devDependencies": {
     "@eslint/js": "^10",
-    "@types/better-sqlite3": "^7",
-    "@types/node": "^24.12.4",
-    "eslint": "^10.4.0",
+    "@types/better-sqlite3": "^9",
+    "@types/node": "^24",
+    "eslint": "^10",
     "eslint-plugin-n": "^18",
-    "globals": "^17.6.0",
+    "globals": "^17",
     "pino-pretty": "^13",
-    "pm2": "^6.0.14",
-    "prettier": "^3.8.3",
-    "prisma": "^6.19.3",
-    "typescript": "^6.0.3",
-    "typescript-eslint": "^8.60.0"
+    "pm2": "^7",
+    "prettier": "^3",
+    "prisma": "^7",
+    "typescript": "^6",
+    "typescript-eslint": "^8"
   }
 }

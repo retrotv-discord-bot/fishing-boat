@@ -27,6 +27,7 @@ import VesselCrewEntity from "../../entities/vesselCrew.entity";
 import { privateReply } from "../../utils/reply";
 import type Crew from "../../entities/crew";
 import { logger } from "../../config/logger";
+import { getChannelName } from "../../utils/channel";
 
 export default class VesselService {
     private readonly DEFAULT_DESCRIPTION = "설명이 없습니다.";
@@ -45,6 +46,7 @@ export default class VesselService {
 
     // 건조
     public createVessel = async (interaction: ChatInputCommandInteraction): Promise<InteractionResponse<boolean>> => {
+        const channelName = getChannelName(interaction);
         const channelId = interaction.channelId;
         let alarmTime = interaction.options.getString("출항시간");
         let canMidParticipation: boolean | string | null = interaction.options.getBoolean("중참가능여부");
@@ -126,6 +128,8 @@ export default class VesselService {
 
                 return v;
             });
+
+            logger.info(`${channelName}(${channelId})에서 '${vesselName}' 어선 생성됨`);
         } catch (err: unknown) {
             if (err instanceof Error) {
                 logger.error("Error: " + err.message);
